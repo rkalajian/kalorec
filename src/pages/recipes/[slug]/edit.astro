@@ -1,0 +1,17 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import RecipeForm from "../../../components/RecipeForm.astro";
+import { getStore } from "../../../lib/store";
+
+const { slug } = Astro.params;
+const store = getStore();
+const stored = slug ? await store.get(slug) : null;
+
+if (!stored) {
+  return Astro.redirect("/");
+}
+---
+<Layout title={`Edit ${stored.recipe.title}`}>
+  <h1>Edit {stored.recipe.title}</h1>
+  <RecipeForm mode="edit" recipe={stored.recipe} sha={stored.sha} />
+</Layout>
