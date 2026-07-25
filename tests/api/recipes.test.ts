@@ -69,6 +69,17 @@ describe("POST /api/recipes", () => {
     } as any);
     expect(response.status).toBe(502);
   });
+
+  it("returns 400 on malformed JSON body", async () => {
+    const response = await POST({
+      request: new Request("http://localhost/api/recipes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "not json",
+      }),
+    } as any);
+    expect(response.status).toBe(400);
+  });
 });
 
 describe("PUT /api/recipes/[slug]", () => {
@@ -108,6 +119,29 @@ describe("PUT /api/recipes/[slug]", () => {
     } as any);
     expect(response.status).toBe(409);
     expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty-string title with 400", async () => {
+    mockStore.get.mockResolvedValue({ recipe: existingRecipe, sha: "sha-1" });
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "   " }),
+    } as any);
+    expect(response.status).toBe(400);
+    expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 on malformed JSON body", async () => {
+    mockStore.get.mockResolvedValue({ recipe: existingRecipe, sha: "sha-1" });
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: new Request("http://localhost/api/recipes/chili", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: "not json",
+      }),
+    } as any);
+    expect(response.status).toBe(400);
   });
 });
 

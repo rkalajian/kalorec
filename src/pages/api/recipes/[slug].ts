@@ -7,12 +7,20 @@ function normalizeTags(tags: unknown): string[] | undefined {
 
 export const PUT: APIRoute = async ({ params, request }) => {
   const slug = params.slug!;
-  const body = await request.json();
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
+  }
   const store = getStore();
   const existing = await store.get(slug);
 
   if (!existing) {
     return new Response(JSON.stringify({ error: "Recipe not found" }), { status: 404 });
+  }
+  if (body.title !== undefined && (typeof body.title !== "string" || !body.title.trim())) {
+    return new Response(JSON.stringify({ error: "Title is required" }), { status: 400 });
   }
   if (body.expectedSha && body.expectedSha !== existing.sha) {
     return new Response(
