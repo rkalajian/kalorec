@@ -1,0 +1,77 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getStore } from "../../lib/store";
+
+const { slug } = Astro.params;
+const store = getStore();
+const stored = slug ? await store.get(slug) : null;
+
+if (!stored) {
+  return new Response("Recipe not found", { status: 404 });
+}
+const recipe = stored.recipe;
+---
+<Layout title={recipe.title}>
+  <article class="recipe-view">
+    <div class="recipe-header">
+      <h1>{recipe.title}</h1>
+      <div class="recipe-actions">
+        <a href={`/recipes/${recipe.slug}/edit`} class="button">Edit</a>
+      </div>
+    </div>
+
+    {recipe.image && <img src={recipe.image} alt={recipe.title} class="recipe-image" />}
+
+    <ul class="tag-list">
+      {recipe.tags.map((tag) => <li class="tag">{tag}</li>)}
+    </ul>
+
+    <dl class="recipe-meta">
+      {recipe.servings && (<><dt>Servings</dt><dd>{recipe.servings}</dd></>)}
+      {recipe.prepTime && (<><dt>Prep time</dt><dd>{recipe.prepTime}</dd></>)}
+      {recipe.cookTime && (<><dt>Cook time</dt><dd>{recipe.cookTime}</dd></>)}
+    </dl>
+
+    <section>
+      <h2>Ingredients</h2>
+      <ul>
+        {recipe.ingredients.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Instructions</h2>
+      <ol>
+        {recipe.instructions.map((step) => <li>{step}</li>)}
+      </ol>
+    </section>
+
+    {recipe.nutrition && Object.values(recipe.nutrition).some(Boolean) && (
+      <section>
+        <h2>Nutrition (per serving)</h2>
+        <dl class="recipe-meta">
+          {recipe.nutrition.calories && (<><dt>Calories</dt><dd>{recipe.nutrition.calories}</dd></>)}
+          {recipe.nutrition.protein && (<><dt>Protein</dt><dd>{recipe.nutrition.protein}</dd></>)}
+          {recipe.nutrition.fat && (<><dt>Fat</dt><dd>{recipe.nutrition.fat}</dd></>)}
+          {recipe.nutrition.carbohydrates && (<><dt>Carbohydrates</dt><dd>{recipe.nutrition.carbohydrates}</dd></>)}
+          {recipe.nutrition.fiber && (<><dt>Fiber</dt><dd>{recipe.nutrition.fiber}</dd></>)}
+          {recipe.nutrition.sugar && (<><dt>Sugar</dt><dd>{recipe.nutrition.sugar}</dd></>)}
+          {recipe.nutrition.sodium && (<><dt>Sodium</dt><dd>{recipe.nutrition.sodium}</dd></>)}
+        </dl>
+      </section>
+    )}
+
+    {recipe.notes && (
+      <section>
+        <h2>Notes</h2>
+        <p>{recipe.notes}</p>
+      </section>
+    )}
+
+    {recipe.sourceUrl && (
+      <p class="recipe-source">
+        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer">{recipe.sourceUrl}</a>
+      </p>
+    )}
+  </article>
+</Layout>
