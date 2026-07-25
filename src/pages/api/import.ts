@@ -2,7 +2,13 @@ import type { APIRoute } from "astro";
 import { extractRecipeFromUrl } from "../../lib/extract";
 
 export const POST: APIRoute = async ({ request }) => {
-  const body = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
+  }
+
   if (!body.url || typeof body.url !== "string") {
     return new Response(JSON.stringify({ error: "URL is required" }), { status: 400 });
   }

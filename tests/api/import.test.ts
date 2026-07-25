@@ -16,6 +16,14 @@ function jsonRequest(body: unknown) {
   });
 }
 
+function rawRequest(body: string) {
+  return new Request("http://localhost/api/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body,
+  });
+}
+
 describe("POST /api/import", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -38,5 +46,10 @@ describe("POST /api/import", () => {
     expect(response.status).toBe(422);
     const json = await response.json();
     expect(json.error).toMatch(/404/);
+  });
+
+  it("returns 400 on malformed JSON body", async () => {
+    const response = await POST({ request: rawRequest("not json") } as any);
+    expect(response.status).toBe(400);
   });
 });
