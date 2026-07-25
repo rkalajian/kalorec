@@ -1,0 +1,15 @@
+---
+import type { Recipe } from "../lib/recipe";
+
+interface Props {
+  recipe: Recipe;
+}
+const { recipe } = Astro.props;
+---
+<a href={`/recipes/${recipe.slug}`} class="recipe-card" data-tags={recipe.tags.join(",")} data-title={recipe.title.toLowerCase()}>
+  {recipe.image && <img src={recipe.image} alt="" />}
+  <h3>{recipe.title}</h3>
+  <ul class="tag-list">
+    {recipe.tags.map((tag) => <li class="tag">{tag}</li>)}
+  </ul>
+</a>

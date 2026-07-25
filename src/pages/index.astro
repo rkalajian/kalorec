@@ -1,7 +1,32 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import RecipeCard from "../components/RecipeCard.astro";
+import { getStore } from "../lib/store";
+
+const store = getStore();
+const recipes = await store.list();
+recipes.sort((a, b) => a.title.localeCompare(b.title));
+const allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
 ---
 <Layout title="Recipes">
   <h1>Recipes</h1>
-  <p>Coming soon.</p>
+
+  <div class="list-controls">
+    <input type="search" id="search-input" placeholder="Search recipes..." />
+    <div id="tag-filters" class="tag-list">
+      {allTags.map((tag) => (
+        <button type="button" class="tag-filter" data-tag={tag}>{tag}</button>
+      ))}
+    </div>
+  </div>
+
+  {recipes.length === 0 ? (
+    <p>No recipes yet. <a href="/recipes/new">Add your first one</a>.</p>
+  ) : (
+    <div id="recipe-grid" class="recipe-grid">
+      {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+    </div>
+  )}
 </Layout>
+
+<script src="../scripts/recipe-list.ts"></script>
