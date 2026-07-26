@@ -63,7 +63,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     accessToken: accessToken!,
     // Only carry a repo selection forward when the SAME GitHub account logs back in —
     // otherwise a second user on this browser would inherit the first user's repo.
-    repo: previousSession?.githubLogin === userLogin ? previousSession.repo : null,
+    repo: previousSession && previousSession.githubLogin === userLogin ? previousSession.repo : null,
   };
 
   cookies.set(SESSION_COOKIE, encryptSession(session, sessionSecret), SESSION_COOKIE_OPTIONS);
