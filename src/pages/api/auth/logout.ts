@@ -3,5 +3,5 @@ import { SESSION_COOKIE } from "../../../lib/session";
 
 export const POST: APIRoute = ({ cookies, redirect }) => {
   cookies.delete(SESSION_COOKIE, { path: "/" });
-  return redirect("/api/auth/login");
+  return redirect("/logged-out");
 };

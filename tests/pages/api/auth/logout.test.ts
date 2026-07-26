@@ -3,7 +3,7 @@ import { POST } from "../../../../src/pages/api/auth/logout";
 import { SESSION_COOKIE } from "../../../../src/lib/session";
 
 describe("POST /api/auth/logout", () => {
-  it("clears the session cookie and redirects to login", async () => {
+  it("clears the session cookie and redirects to the logged-out page (not straight back into GitHub auth)", async () => {
     const del = vi.fn();
     const response = await POST({
       cookies: { delete: del },
@@ -12,6 +12,6 @@ describe("POST /api/auth/logout", () => {
 
     expect(del).toHaveBeenCalledWith(SESSION_COOKIE, { path: "/" });
     expect(response.status).toBe(302);
-    expect(response.headers.get("Location")).toBe("/api/auth/login");
+    expect(response.headers.get("Location")).toBe("/logged-out");
   });
 });

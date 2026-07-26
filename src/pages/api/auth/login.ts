@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { randomBytes } from "node:crypto";
-import { OAUTH_STATE_COOKIE } from "../../../lib/session";
+import { OAUTH_STATE_COOKIE, requireEnv } from "../../../lib/session";
 
 export const GET: APIRoute = ({ cookies, redirect }) => {
   const state = randomBytes(16).toString("hex");
@@ -14,7 +14,7 @@ export const GET: APIRoute = ({ cookies, redirect }) => {
   });
 
   const params = new URLSearchParams({
-    client_id: import.meta.env.GITHUB_CLIENT_ID,
+    client_id: requireEnv("GITHUB_CLIENT_ID", import.meta.env.GITHUB_CLIENT_ID),
     scope: "repo",
     state,
   });

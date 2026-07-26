@@ -2,10 +2,21 @@
 import { Octokit } from "@octokit/rest";
 import Layout from "../layouts/Layout.astro";
 import { listSelectableRepos } from "../lib/repos";
+import { SESSION_COOKIE } from "../lib/session";
 
 const { session } = Astro.locals;
 const octokit = new Octokit({ auth: session.accessToken });
-const repos = await listSelectableRepos(octokit as any);
+
+let repos;
+try {
+  repos = await listSelectableRepos(octokit as any);
+} catch (err: any) {
+  if (err.status === 401) {
+    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+    return Astro.redirect("/logged-out?error=session_expired");
+  }
+  throw err;
+}
 const error = Astro.url.searchParams.get("error");
 ---
 <Layout title="Settings">

@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { Octokit } from "@octokit/rest";
 import { resolveRepoSelection } from "../../../lib/repos";
-import { encryptSession, SESSION_COOKIE } from "../../../lib/session";
+import { encryptSession, requireEnv, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "../../../lib/session";
 
 export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => {
   const form = await request.formData();
@@ -21,13 +21,11 @@ export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => 
   }
 
   const session = { ...locals.session, repo };
-  cookies.set(SESSION_COOKIE, encryptSession(session, import.meta.env.SESSION_SECRET), {
-    httpOnly: true,
-    secure: import.meta.env.PROD,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
+  cookies.set(
+    SESSION_COOKIE,
+    encryptSession(session, requireEnv("SESSION_SECRET", import.meta.env.SESSION_SECRET)),
+    SESSION_COOKIE_OPTIONS
+  );
 
   return redirect("/");
 };

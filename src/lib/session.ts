@@ -15,6 +15,19 @@ export interface Session {
 export const SESSION_COOKIE = "session";
 export const OAUTH_STATE_COOKIE = "oauth_state";
 
+export const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: import.meta.env.PROD,
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 30,
+};
+
+export function requireEnv(name: string, value: string | undefined): string {
+  if (!value) throw new Error(`Missing required env var ${name}`);
+  return value;
+}
+
 function deriveKey(secret: string): Buffer {
   return createHash("sha256").update(secret).digest();
 }

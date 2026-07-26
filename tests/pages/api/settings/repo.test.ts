@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { decryptSession, SESSION_COOKIE, type Session } from "../../../../src/lib/session";
+import {
+  decryptSession,
+  SESSION_COOKIE,
+  SESSION_COOKIE_OPTIONS,
+  type Session,
+} from "../../../../src/lib/session";
 
 const mockOctokitInstance = {
   repos: {
@@ -37,18 +42,20 @@ describe("POST /api/settings/repo", () => {
     const { POST } = await import("../../../../src/pages/api/settings/repo");
 
     const session: Session = { githubLogin: "rob", accessToken: "tok", repo: null };
-    const setCalls: Array<[string, string]> = [];
+    const setCalls: Array<[string, string, unknown]> = [];
     const response = await POST({
       request: formRequest({ owner: "rob", name: "recipes" }),
       locals: { session },
-      cookies: { set: (n: string, v: string) => setCalls.push([n, v]) },
+      cookies: { set: (n: string, v: string, o?: unknown) => setCalls.push([n, v, o]) },
       redirect: (location: string) => new Response(null, { status: 302, headers: { Location: location } }),
     } as any);
 
     expect(response.headers.get("Location")).toBe("/");
     expect(setCalls).toHaveLength(1);
-    const [name, value] = setCalls[0];
+    const [name, value, options] = setCalls[0];
     expect(name).toBe(SESSION_COOKIE);
+    expect(options).toEqual(SESSION_COOKIE_OPTIONS);
+    expect(options).toMatchObject({ httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
     expect(decryptSession(value, "test-secret-value")).toEqual({
       githubLogin: "rob",
       accessToken: "tok",

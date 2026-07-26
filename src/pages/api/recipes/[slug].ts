@@ -1,8 +1,9 @@
 import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
 import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
+import { SESSION_COOKIE } from "../../../lib/session";
 
-export const PUT: APIRoute = async ({ params, request, locals }) => {
+export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
   const slug = params.slug!;
   let body: any;
   try {
@@ -11,7 +12,23 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
   const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
-  const existing = await store.get(slug);
+
+  let existing;
+  try {
+    existing = await store.get(slug);
+  } catch (err: any) {
+    if (err.status === 401) {
+      cookies.delete(SESSION_COOKIE, { path: "/" });
+      return new Response(JSON.stringify({ error: "Session expired, please log in again" }), { status: 401 });
+    }
+    if (err.status === 403) {
+      return new Response(
+        JSON.stringify({ error: "No push access to this repository — update it in Settings" }),
+        { status: 403 }
+      );
+    }
+    return new Response(JSON.stringify({ error: `Failed to load recipe: ${err.message}` }), { status: 502 });
+  }
 
   if (!existing) {
     return new Response(JSON.stringify({ error: "Recipe not found" }), { status: 404 });
@@ -49,16 +66,42 @@ export const PUT: APIRoute = async ({ params, request, locals }) => {
   try {
     await store.update(updated, existing.sha);
   } catch (err: any) {
+    if (err.status === 401) {
+      cookies.delete(SESSION_COOKIE, { path: "/" });
+      return new Response(JSON.stringify({ error: "Session expired, please log in again" }), { status: 401 });
+    }
+    if (err.status === 403) {
+      return new Response(
+        JSON.stringify({ error: "No push access to this repository — update it in Settings" }),
+        { status: 403 }
+      );
+    }
     return new Response(JSON.stringify({ error: `Failed to save recipe: ${err.message}` }), { status: 502 });
   }
 
   return new Response(JSON.stringify({ slug }), { status: 200 });
 };
 
-export const DELETE: APIRoute = async ({ params, locals }) => {
+export const DELETE: APIRoute = async ({ params, locals, cookies }) => {
   const slug = params.slug!;
   const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
-  const existing = await store.get(slug);
+
+  let existing;
+  try {
+    existing = await store.get(slug);
+  } catch (err: any) {
+    if (err.status === 401) {
+      cookies.delete(SESSION_COOKIE, { path: "/" });
+      return new Response(JSON.stringify({ error: "Session expired, please log in again" }), { status: 401 });
+    }
+    if (err.status === 403) {
+      return new Response(
+        JSON.stringify({ error: "No push access to this repository — update it in Settings" }),
+        { status: 403 }
+      );
+    }
+    return new Response(JSON.stringify({ error: `Failed to load recipe: ${err.message}` }), { status: 502 });
+  }
 
   if (!existing) {
     return new Response(JSON.stringify({ error: "Recipe not found" }), { status: 404 });
@@ -67,6 +110,16 @@ export const DELETE: APIRoute = async ({ params, locals }) => {
   try {
     await store.remove(slug, existing.sha, existing.recipe.title);
   } catch (err: any) {
+    if (err.status === 401) {
+      cookies.delete(SESSION_COOKIE, { path: "/" });
+      return new Response(JSON.stringify({ error: "Session expired, please log in again" }), { status: 401 });
+    }
+    if (err.status === 403) {
+      return new Response(
+        JSON.stringify({ error: "No push access to this repository — update it in Settings" }),
+        { status: 403 }
+      );
+    }
     return new Response(JSON.stringify({ error: `Failed to delete recipe: ${err.message}` }), { status: 502 });
   }
 
