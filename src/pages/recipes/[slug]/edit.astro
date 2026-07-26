@@ -2,10 +2,24 @@
 import Layout from "../../../layouts/Layout.astro";
 import RecipeForm from "../../../components/RecipeForm.astro";
 import { getStore } from "../../../lib/store";
+import { SESSION_COOKIE } from "../../../lib/session";
 
 const { slug } = Astro.params;
-const store = getStore();
-const stored = slug ? await store.get(slug) : null;
+const store = getStore({ accessToken: Astro.locals.session.accessToken, repo: Astro.locals.session.repo! });
+
+let stored;
+try {
+  stored = slug ? await store.get(slug) : null;
+} catch (err: any) {
+  if (err.status === 401) {
+    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+    return Astro.redirect("/logged-out?error=session_expired");
+  }
+  if (err.status === 403) {
+    return Astro.redirect("/settings?error=no_access");
+  }
+  throw err;
+}
 
 if (!stored) {
   return Astro.redirect("/");

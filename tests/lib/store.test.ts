@@ -1,52 +1,63 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Octokit } from "@octokit/rest";
+import { getStore } from "../../src/lib/store";
+import { RecipeStore } from "../../src/lib/github";
 
-const storeSourcePath = fileURLToPath(new URL("../../src/lib/store.ts", import.meta.url));
+const mockOctokitInstance = {
+  repos: {
+    getContent: vi.fn(),
+  },
+};
 
-describe("store.ts source shape", () => {
-  // Regression guard for the production-build bug: Astro's vite-plugin-env only
-  // injects the individual env keys referenced as `import.meta.env.KEY` in a
-  // file's own source text. A bare `import.meta.env` reference (no trailing
-  // `.KEY`) causes Astro to strip GITHUB_TOKEN/GITHUB_REPO/GITHUB_BRANCH out of
-  // the production build entirely, even though it works fine in `astro dev`.
-  it("never references bare import.meta.env — only per-key import.meta.env.KEY", () => {
-    const source = readFileSync(storeSourcePath, "utf-8");
-    const bareUsage = /import\.meta\.env(?!\s*\.\s*\w)/g;
-    expect(source.match(bareUsage)).toBeNull();
-  });
+vi.mock("@octokit/rest", () => ({
+  Octokit: vi.fn(() => mockOctokitInstance),
+}));
 
-  it("explicitly references each required env key by literal name", () => {
-    const source = readFileSync(storeSourcePath, "utf-8");
-    expect(source).toContain("import.meta.env.GITHUB_TOKEN");
-    expect(source).toContain("import.meta.env.GITHUB_REPO");
-    expect(source).toContain("import.meta.env.GITHUB_BRANCH");
-  });
-});
+const session = {
+  accessToken: "tok_123",
+  repo: { owner: "rob", name: "recipes", branch: "dev" },
+};
 
 describe("getStore", () => {
-  afterEach(() => {
-    vi.unstubAllEnvs();
-    vi.resetModules();
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it("builds a store from GITHUB_TOKEN/GITHUB_REPO/GITHUB_BRANCH", async () => {
-    vi.stubEnv("GITHUB_TOKEN", "tok_123");
-    vi.stubEnv("GITHUB_REPO", "rob/recipes");
-    vi.stubEnv("GITHUB_BRANCH", "dev");
-    const { getStore } = await import("../../src/lib/store");
-    expect(getStore()).toBeDefined();
+  it("builds a RecipeStore scoped to the session's chosen repo", () => {
+    expect(getStore(session)).toBeInstanceOf(RecipeStore);
   });
 
-  it("throws when GITHUB_TOKEN is missing", async () => {
-    vi.stubEnv("GITHUB_REPO", "rob/recipes");
-    const { getStore } = await import("../../src/lib/store");
-    expect(() => getStore()).toThrow(/GITHUB_TOKEN/);
+  it("authenticates Octokit with the session's access token", () => {
+    getStore(session);
+    expect(Octokit).toHaveBeenCalledWith({ auth: "tok_123" });
   });
 
-  it("throws when GITHUB_REPO is missing", async () => {
-    vi.stubEnv("GITHUB_TOKEN", "tok_123");
-    const { getStore } = await import("../../src/lib/store");
-    expect(() => getStore()).toThrow(/GITHUB_REPO/);
+  it("maps session repo owner/name/branch onto the GitHub owner/repo/ref params", async () => {
+    mockOctokitInstance.repos.getContent.mockResolvedValue({ data: [] });
+
+    const store = getStore(session);
+    await store.list();
+
+    expect(mockOctokitInstance.repos.getContent).toHaveBeenCalledWith({
+      owner: "rob",
+      repo: "recipes",
+      path: "data/recipes",
+      ref: "dev",
+    });
+  });
+
+  it("does not swap owner and name when they differ", async () => {
+    mockOctokitInstance.repos.getContent.mockResolvedValue({ data: [] });
+
+    const store = getStore({
+      accessToken: "tok_abc",
+      repo: { owner: "some-org", name: "cookbook", branch: "trunk" },
+    });
+    await store.list();
+
+    expect(Octokit).toHaveBeenCalledWith({ auth: "tok_abc" });
+    expect(mockOctokitInstance.repos.getContent).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: "some-org", repo: "cookbook", ref: "trunk" })
+    );
   });
 });

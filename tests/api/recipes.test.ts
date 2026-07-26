@@ -10,11 +10,14 @@ const mockStore = {
 };
 
 vi.mock("../../src/lib/store", () => ({
-  getStore: () => mockStore,
+  getStore: vi.fn(() => mockStore),
 }));
 
+import { getStore } from "../../src/lib/store";
 import { POST } from "../../src/pages/api/recipes/index";
 import { PUT, DELETE } from "../../src/pages/api/recipes/[slug]";
+
+const fakeSession = { accessToken: "tok", repo: { owner: "rob", name: "recipes", branch: "main" } };
 
 function jsonRequest(url: string, method: string, body?: unknown) {
   return new Request(url, {
@@ -47,6 +50,7 @@ describe("POST /api/recipes", () => {
         ingredients: ["beef"],
         instructions: ["cook"],
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(201);
     const json = await response.json();
@@ -54,10 +58,28 @@ describe("POST /api/recipes", () => {
     expect(mockStore.create).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "grandma-s-chili", tags: ["dinner", "spicy"] })
     );
+    expect(getStore).toHaveBeenCalledWith({ accessToken: fakeSession.accessToken, repo: fakeSession.repo });
+  });
+
+  it("returns 401 and clears the session cookie when the GitHub token is revoked", async () => {
+    mockStore.list.mockRejectedValue(Object.assign(new Error("Bad credentials"), { status: 401 }));
+    const cookieDelete = vi.fn();
+    const response = await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili" }),
+      locals: { session: fakeSession },
+      cookies: { delete: cookieDelete },
+    } as any);
+    expect(response.status).toBe(401);
+    expect(cookieDelete).toHaveBeenCalled();
+    const json = await response.json();
+    expect(json.error).not.toMatch(/Bad credentials/);
   });
 
   it("rejects a missing title with 400", async () => {
-    const response = await POST({ request: jsonRequest("http://localhost/api/recipes", "POST", {}) } as any);
+    const response = await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", {}),
+      locals: { session: fakeSession },
+    } as any);
     expect(response.status).toBe(400);
   });
 
@@ -66,6 +88,7 @@ describe("POST /api/recipes", () => {
     mockStore.create.mockRejectedValue(new Error("rate limited"));
     const response = await POST({
       request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili" }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(502);
   });
@@ -77,6 +100,7 @@ describe("POST /api/recipes", () => {
         headers: { "Content-Type": "application/json" },
         body: "not json",
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(400);
   });
@@ -89,6 +113,7 @@ describe("POST /api/recipes", () => {
         title: "Chili",
         tags: ["dinner", "Dinner", " DINNER "],
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ tags: ["dinner"] }));
   });
@@ -101,6 +126,7 @@ describe("POST /api/recipes", () => {
         title: "Chili",
         nutrition: { calories: "", protein: "", fat: "", carbohydrates: "", fiber: "", sugar: "", sodium: "" },
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ nutrition: undefined }));
   });
@@ -114,6 +140,7 @@ describe("POST /api/recipes", () => {
         servings: "",
         prepTime: "",
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(
       expect.objectContaining({ servings: undefined, prepTime: undefined })
@@ -129,6 +156,7 @@ describe("POST /api/recipes", () => {
         ingredients: [1, "  2 cups flour  "],
         instructions: [true],
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(
       expect.objectContaining({ ingredients: ["1", "2 cups flour"], instructions: ["true"] })
@@ -145,12 +173,14 @@ describe("PUT /api/recipes/[slug]", () => {
     const response = await PUT({
       params: { slug: "chili" },
       request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Chili Updated" }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(200);
     expect(mockStore.update).toHaveBeenCalledWith(
       expect.objectContaining({ title: "Chili Updated" }),
       "sha-1"
     );
+    expect(getStore).toHaveBeenCalledWith({ accessToken: fakeSession.accessToken, repo: fakeSession.repo });
   });
 
   it("returns 404 when the recipe does not exist", async () => {
@@ -158,8 +188,24 @@ describe("PUT /api/recipes/[slug]", () => {
     const response = await PUT({
       params: { slug: "missing" },
       request: jsonRequest("http://localhost/api/recipes/missing", "PUT", { title: "X" }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(404);
+  });
+
+  it("returns 401 and clears the session cookie when the GitHub token is revoked", async () => {
+    mockStore.get.mockRejectedValue(Object.assign(new Error("Bad credentials"), { status: 401 }));
+    const cookieDelete = vi.fn();
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "X" }),
+      locals: { session: fakeSession },
+      cookies: { delete: cookieDelete },
+    } as any);
+    expect(response.status).toBe(401);
+    expect(cookieDelete).toHaveBeenCalled();
+    const json = await response.json();
+    expect(json.error).not.toMatch(/Bad credentials/);
   });
 
   it("returns 409 on sha mismatch", async () => {
@@ -170,6 +216,7 @@ describe("PUT /api/recipes/[slug]", () => {
         title: "Chili Updated",
         expectedSha: "sha-1",
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(409);
     expect(mockStore.update).not.toHaveBeenCalled();
@@ -180,6 +227,7 @@ describe("PUT /api/recipes/[slug]", () => {
     const response = await PUT({
       params: { slug: "chili" },
       request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "   " }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(400);
     expect(mockStore.update).not.toHaveBeenCalled();
@@ -194,6 +242,7 @@ describe("PUT /api/recipes/[slug]", () => {
         headers: { "Content-Type": "application/json" },
         body: "not json",
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(response.status).toBe(400);
   });
@@ -210,6 +259,7 @@ describe("PUT /api/recipes/[slug]", () => {
         title: "Chili",
         servings: "",
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(
       expect.objectContaining({ servings: undefined }),
@@ -229,6 +279,7 @@ describe("PUT /api/recipes/[slug]", () => {
         title: "Chili",
         nutrition: { calories: "", protein: "", fat: "", carbohydrates: "", fiber: "", sugar: "", sodium: "" },
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(
       expect.objectContaining({ nutrition: undefined }),
@@ -245,6 +296,7 @@ describe("PUT /api/recipes/[slug]", () => {
         title: "Chili",
         tags: ["dinner", "Dinner"],
       }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(
       expect.objectContaining({ tags: ["dinner"] }),
@@ -261,6 +313,7 @@ describe("PUT /api/recipes/[slug]", () => {
     await PUT({
       params: { slug: "chili" },
       request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Chili" }),
+      locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(
       expect.objectContaining({ servings: "4" }),
@@ -275,14 +328,29 @@ describe("DELETE /api/recipes/[slug]", () => {
   it("deletes an existing recipe", async () => {
     mockStore.get.mockResolvedValue({ recipe: existingRecipe, sha: "sha-1" });
     mockStore.remove.mockResolvedValue(undefined);
-    const response = await DELETE({ params: { slug: "chili" } } as any);
+    const response = await DELETE({ params: { slug: "chili" }, locals: { session: fakeSession } } as any);
     expect(response.status).toBe(204);
     expect(mockStore.remove).toHaveBeenCalledWith("chili", "sha-1", "Chili");
+    expect(getStore).toHaveBeenCalledWith({ accessToken: fakeSession.accessToken, repo: fakeSession.repo });
   });
 
   it("returns 404 when the recipe does not exist", async () => {
     mockStore.get.mockResolvedValue(null);
-    const response = await DELETE({ params: { slug: "missing" } } as any);
+    const response = await DELETE({ params: { slug: "missing" }, locals: { session: fakeSession } } as any);
     expect(response.status).toBe(404);
+  });
+
+  it("returns 401 and clears the session cookie when the GitHub token is revoked", async () => {
+    mockStore.get.mockRejectedValue(Object.assign(new Error("Bad credentials"), { status: 401 }));
+    const cookieDelete = vi.fn();
+    const response = await DELETE({
+      params: { slug: "chili" },
+      locals: { session: fakeSession },
+      cookies: { delete: cookieDelete },
+    } as any);
+    expect(response.status).toBe(401);
+    expect(cookieDelete).toHaveBeenCalled();
+    const json = await response.json();
+    expect(json.error).not.toMatch(/Bad credentials/);
   });
 });

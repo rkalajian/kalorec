@@ -1,0 +1,59 @@
+---
+import { Octokit } from "@octokit/rest";
+import Layout from "../layouts/Layout.astro";
+import { listSelectableRepos } from "../lib/repos";
+import { SESSION_COOKIE } from "../lib/session";
+
+const { session } = Astro.locals;
+const octokit = new Octokit({ auth: session.accessToken });
+
+let repos;
+try {
+  repos = await listSelectableRepos(octokit as any);
+} catch (err: any) {
+  if (err.status === 401) {
+    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+    return Astro.redirect("/logged-out?error=session_expired");
+  }
+  throw err;
+}
+const error = Astro.url.searchParams.get("error");
+---
+<Layout title="Settings">
+  <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
+  <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+    Pick which of your GitHub repos recipes should be stored in.
+  </p>
+
+  {error === "no_access" && (
+    <p class="mt-4 text-red-600 dark:text-red-400">
+      You no longer have push access to that repo. Pick a different one below.
+    </p>
+  )}
+
+  <ul class="mt-4 flex flex-col gap-2">
+    {repos.map((repo) => {
+      const isCurrent = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
+      return (
+        <li class="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+          <span>
+            {repo.owner}/{repo.name}
+            {repo.private && <span class="ml-2 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">private</span>}
+            {isCurrent && <span class="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">selected</span>}
+          </span>
+          <form method="POST" action="/api/settings/repo">
+            <input type="hidden" name="owner" value={repo.owner} />
+            <input type="hidden" name="name" value={repo.name} />
+            <button
+              type="submit"
+              class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800"
+              disabled={isCurrent}
+            >
+              {isCurrent ? "Selected" : "Select"}
+            </button>
+          </form>
+        </li>
+      );
+    })}
+  </ul>
+</Layout>

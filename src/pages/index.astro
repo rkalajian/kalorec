@@ -2,9 +2,23 @@
 import Layout from "../layouts/Layout.astro";
 import RecipeCard from "../components/RecipeCard.astro";
 import { getStore } from "../lib/store";
+import { SESSION_COOKIE } from "../lib/session";
 
-const store = getStore();
-const recipes = await store.list();
+const store = getStore({ accessToken: Astro.locals.session.accessToken, repo: Astro.locals.session.repo! });
+
+let recipes;
+try {
+  recipes = await store.list();
+} catch (err: any) {
+  if (err.status === 401) {
+    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+    return Astro.redirect("/logged-out?error=session_expired");
+  }
+  if (err.status === 403) {
+    return Astro.redirect("/settings?error=no_access");
+  }
+  throw err;
+}
 recipes.sort((a, b) => a.title.localeCompare(b.title));
 const allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
 ---
