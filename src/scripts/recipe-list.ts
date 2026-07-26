@@ -2,8 +2,6 @@ const searchInput = document.getElementById("search-input") as HTMLInputElement 
 const tagFilters = document.getElementById("tag-filters");
 const grid = document.getElementById("recipe-grid");
 
-const activeTagClasses = ["bg-green-600", "text-white", "dark:bg-green-500"];
-
 if (searchInput && grid) {
   const activeTags = new Set<string>();
 
@@ -26,10 +24,10 @@ if (searchInput && grid) {
     const tag = target.dataset.tag!;
     if (activeTags.has(tag)) {
       activeTags.delete(tag);
-      target.classList.remove(...activeTagClasses);
+      target.setAttribute("aria-pressed", "false");
     } else {
       activeTags.add(tag);
-      target.classList.add(...activeTagClasses);
+      target.setAttribute("aria-pressed", "true");
     }
     applyFilter();
   });
