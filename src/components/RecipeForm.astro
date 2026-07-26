@@ -23,7 +23,7 @@ const initial = {
 };
 ---
 <form id="recipe-form" data-mode={mode} data-slug={recipe?.slug ?? ""} data-sha={sha ?? ""}>
-  <script type="application/json" id="recipe-initial-data" set:html={JSON.stringify(initial)} />
+  <script type="application/json" id="recipe-initial-data" set:html={JSON.stringify(initial).replace(/</g, "\\u003c")} />
 
   {mode === "create" && (
     <section class="import-panel">
