@@ -1,0 +1,39 @@
+{
+  "slug": "vegan-flatbread",
+  "title": "Vegan Flatbread",
+  "tags": [
+    "bread",
+    "accessory",
+    "vegan"
+  ],
+  "servings": "12",
+  "prepTime": "45m",
+  "cookTime": "25.",
+  "ingredients": [
+    "600g flour",
+    "100g salted butter",
+    "370ml vegan milk"
+  ],
+  "instructions": [
+    "Melt butter in milk: Combine 100 grams unsalted butter and 370 milliliters milk and heat until butter is just melted — on the stove or in the microwave.",
+    "Combine dry ingredients: Combine 600 grams plain flour (all-purpose), plus extra for dusting, and the butter-milk mixture in a large bowl and mix until a dough forms.",
+    "Knead: Sprinkle your work surface with flour and knead for a few minutes until smooth — it doesn't need much kneading. Add extra flour if the dough is too sticky.",
+    "Rest dough: Wrap with cling wrap and rest at room temperature for 30 minutes",
+    "Roll into rounds: Dust the bench top with flour. Cut the dough into 12 equal pieces, roll into balls, then roll each out into 20 cm / 8\" rounds, 2–3 mm thick.",
+    "Heat pan: Heat a non-stick pan over high heat — no oil needed.",
+    "Cook: Place one flatbread in the pan and cook for about 1–1½ minutes — it should puff up dramatically. Once the underside has golden patches, flip and cook the other side for 1m 30s to 1 minute until golden spots appear and it puffs again. Repeat with remaining rounds.",
+    "Keep warm: Stack cooked flatbreads and keep wrapped in a tea towel — the moisture softens the surface and makes them more pliable."
+  ],
+  "createdAt": "2026-07-26T11:14:01.282Z",
+  "updatedAt": "2026-07-26T13:19:14.978Z",
+  "nutrition": {
+    "calories": "185 kcal",
+    "protein": "4.05g",
+    "fat": "7.6g",
+    "carbohydrates": "25g",
+    "fiber": ".85g",
+    "sugar": "1.1g",
+    "sodium": "193mg"
+  },
+  "image": "https://www.jocooks.com/wp-content/uploads/2021/01/no-yeast-flatbread-1-10.jpg"
+}
