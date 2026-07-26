@@ -74,6 +74,7 @@ button.tag-filter.active { background: var(--accent); color: #fff; }
 
 .message { min-height: 1.2rem; }
 .message.error { color: #a3312a; }
+.message.warning { color: #9a5b00; }
 
 .row { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; }
 .row input { flex: 1; }

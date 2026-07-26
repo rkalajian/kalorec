@@ -89,10 +89,13 @@ function collectRows(container: HTMLElement, kind: "ingredient" | "instruction")
     .filter(Boolean);
 }
 
-function showMessage(id: string, text: string, isError: boolean) {
+type MessageKind = "info" | "warning" | "error";
+
+function showMessage(id: string, text: string, kind: MessageKind = "info") {
   const el = document.getElementById(id)!;
   el.textContent = text;
-  el.classList.toggle("error", isError);
+  el.classList.remove("error", "warning");
+  if (kind !== "info") el.classList.add(kind);
 }
 
 const importButton = document.getElementById("import-button");
@@ -101,7 +104,7 @@ if (importButton) {
     const urlInput = document.getElementById("import-url") as HTMLInputElement;
     const url = urlInput.value.trim();
     if (!url) return;
-    showMessage("import-message", "Importing…", false);
+    showMessage("import-message", "Importing…", "info");
     try {
       const res = await fetch("/api/import", {
         method: "POST",
@@ -126,10 +129,10 @@ if (importButton) {
       showMessage(
         "import-message",
         json.warning || "Imported. Review the fields below before saving.",
-        Boolean(json.warning)
+        json.warning ? "warning" : "info"
       );
     } catch (err) {
-      showMessage("import-message", err instanceof Error ? err.message : "Import failed", true);
+      showMessage("import-message", err instanceof Error ? err.message : "Import failed", "error");
     }
   });
 }
@@ -141,7 +144,7 @@ form.addEventListener("submit", async (event) => {
 
   const title = (document.getElementById("title") as HTMLInputElement).value.trim();
   if (!title) {
-    showMessage("form-message", "Title is required", true);
+    showMessage("form-message", "Title is required", "error");
     return;
   }
 
@@ -181,7 +184,7 @@ form.addEventListener("submit", async (event) => {
     if (!res.ok) throw new Error(json.error || "Save failed");
     window.location.href = `/recipes/${json.slug}`;
   } catch (err) {
-    showMessage("form-message", err instanceof Error ? err.message : "Save failed", true);
+    showMessage("form-message", err instanceof Error ? err.message : "Save failed", "error");
   }
 });
 
@@ -198,7 +201,7 @@ if (deleteButton) {
       }
       window.location.href = "/";
     } catch (err) {
-      showMessage("form-message", err instanceof Error ? err.message : "Delete failed", true);
+      showMessage("form-message", err instanceof Error ? err.message : "Delete failed", "error");
     }
   });
 }

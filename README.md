@@ -4,7 +4,7 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 
 ## How it works
 
-- Recipes live at `data/recipes/<slug>.json` in a GitHub repo (this repo, by default).
+- Recipes live at `data/recipes/<slug>.json` in a GitHub repo. There is no default — `GITHUB_REPO` is a required environment variable (see Setup below); it can point at this repo or a separate data-only repo.
 - Server-side routes read/write that repo via the GitHub API — no database.
 - Pasting a link parses the page's `schema.org/Recipe` structured data when present, falling back to a best-effort heuristic extraction otherwise.
 - No login — this app assumes a single trusted user. Don't deploy it somewhere publicly reachable without adding access protection in front of it.
@@ -23,7 +23,8 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 
 1. Connect this repo to a new Netlify site (build command and publish directory are already set in `netlify.toml`).
 2. In Site settings → Environment variables, add `GITHUB_TOKEN`, `GITHUB_REPO`, and optionally `GITHUB_BRANCH`.
-3. Deploy. Every recipe add/edit/delete commits directly to the configured GitHub branch and is visible on next page load (no rebuild needed).
+3. Deploy. Every recipe add/edit/delete commits directly to the configured GitHub branch and is visible on next page load — the app reads live from the GitHub API, no rebuild needed to *see* the change.
+4. **Rebuild tradeoff:** if `GITHUB_REPO` points at this same repo/branch (Netlify's default watch target), every commit from a recipe add/edit/delete also triggers a full Netlify rebuild, since no skip-build marker (e.g. `[skip ci]`) is added to those commit messages. To avoid a rebuild per recipe change, either point `GITHUB_REPO` at a separate data-only repo, or add a `netlify.toml` `[build.ignore]` guard that skips builds for commits touching only `data/recipes/**`.
 
 ## Testing
 

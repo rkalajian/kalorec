@@ -2,6 +2,7 @@
 node_modules/
 dist/
 .netlify/
+.astro/
 .env
 .env.*
 !.env.example
