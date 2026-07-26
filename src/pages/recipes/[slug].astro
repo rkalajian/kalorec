@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import { getStore } from "../../lib/store";
 
 const { slug } = Astro.params;
-const store = getStore();
+const store = getStore({ accessToken: Astro.locals.session.accessToken, repo: Astro.locals.session.repo! });
 const stored = slug ? await store.get(slug) : null;
 
 if (!stored) {

@@ -3,7 +3,7 @@ import { getStore } from "../../../lib/store";
 import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
 import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   let body: any;
   try {
     body = await request.json();
@@ -14,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Title is required" }), { status: 400 });
   }
 
-  const store = getStore();
+  const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
   const existing = await store.list();
   const slug = dedupeSlug(slugify(body.title), existing.map((r) => r.slug));
   const now = new Date().toISOString();

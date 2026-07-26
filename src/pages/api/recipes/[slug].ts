@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
 import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 
-export const PUT: APIRoute = async ({ params, request }) => {
+export const PUT: APIRoute = async ({ params, request, locals }) => {
   const slug = params.slug!;
   let body: any;
   try {
@@ -10,7 +10,7 @@ export const PUT: APIRoute = async ({ params, request }) => {
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
-  const store = getStore();
+  const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
   const existing = await store.get(slug);
 
   if (!existing) {
@@ -55,9 +55,9 @@ export const PUT: APIRoute = async ({ params, request }) => {
   return new Response(JSON.stringify({ slug }), { status: 200 });
 };
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, locals }) => {
   const slug = params.slug!;
-  const store = getStore();
+  const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
   const existing = await store.get(slug);
 
   if (!existing) {
