@@ -96,8 +96,8 @@ function collectRows(container: HTMLElement, kind: "ingredient" | "instruction")
 type MessageKind = "info" | "warning" | "error";
 
 const messageKindClasses: Record<"warning" | "error", string[]> = {
-  warning: ["text-amber-600", "dark:text-amber-400"],
-  error: ["text-red-600", "dark:text-red-400"],
+  warning: ["text-amber-700", "dark:text-amber-400"],
+  error: ["text-red-700", "dark:text-red-400"],
 };
 
 function showMessage(id: string, text: string, kind: MessageKind = "info") {

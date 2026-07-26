@@ -24,8 +24,8 @@ const initial = {
 
 const labelClass = "mt-3 block text-sm font-medium";
 const inputClass = "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
-const primaryButtonClass = "inline-block rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400";
-const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400";
+const primaryButtonClass = "inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800";
+const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700";
 ---
 <form id="recipe-form" data-mode={mode} data-slug={recipe?.slug ?? ""} data-sha={sha ?? ""} class="mt-4">
   <script type="application/json" id="recipe-initial-data" set:html={JSON.stringify(initial).replace(/</g, "\\u003c")} />

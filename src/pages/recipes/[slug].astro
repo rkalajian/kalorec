@@ -16,7 +16,7 @@ const recipe = stored.recipe;
     <div class="flex items-center justify-between">
       <h1 class="text-2xl font-semibold tracking-tight">{recipe.title}</h1>
       <div>
-        <a href={`/recipes/${recipe.slug}/edit`} class="inline-block rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400">Edit</a>
+        <a href={`/recipes/${recipe.slug}/edit`} class="inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">Edit</a>
       </div>
     </div>
 
@@ -72,7 +72,7 @@ const recipe = stored.recipe;
 
     {recipe.sourceUrl && (
       <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-600 dark:text-green-400">{recipe.sourceUrl}</a>
+        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{recipe.sourceUrl}</a>
       </p>
     )}
   </article>
