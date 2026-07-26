@@ -1,0 +1,21 @@
+{
+  "slug": "cheap-ass-iced-tea",
+  "title": "Cheap-ass Iced Tea",
+  "tags": [
+    "beverage"
+  ],
+  "servings": "4",
+  "prepTime": "8-12h",
+  "ingredients": [
+    "6 cheap, black tea bags",
+    "2 quarts cold water",
+    "1 pinch of baking soda"
+  ],
+  "instructions": [
+    "Add baking soda to water, then add tea bags",
+    "Brew 8-12 hours, then remove tea bags"
+  ],
+  "notes": "If you want lemon, add 1-2 tablespoons per glass of iced tea. A serving is a pint glass full of ice, with around 10-12 oz of tea.",
+  "createdAt": "2026-07-26T17:27:53.877Z",
+  "updatedAt": "2026-07-26T17:27:53.877Z"
+}
