@@ -21,81 +21,86 @@ const initial = {
   nutrition: recipe?.nutrition ?? {},
   notes: recipe?.notes ?? "",
 };
+
+const labelClass = "mt-3 block text-sm font-medium";
+const inputClass = "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const primaryButtonClass = "inline-block rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-400";
+const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-400";
 ---
-<form id="recipe-form" data-mode={mode} data-slug={recipe?.slug ?? ""} data-sha={sha ?? ""}>
+<form id="recipe-form" data-mode={mode} data-slug={recipe?.slug ?? ""} data-sha={sha ?? ""} class="mt-4">
   <script type="application/json" id="recipe-initial-data" set:html={JSON.stringify(initial).replace(/</g, "\\u003c")} />
 
   {mode === "create" && (
-    <section class="import-panel">
-      <label for="import-url">Import from link</label>
-      <div class="row">
-        <input type="url" id="import-url" placeholder="https://example.com/recipe" />
-        <button type="button" id="import-button">Import</button>
+    <section class="rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+      <label for="import-url" class="block text-sm font-medium">Import from link</label>
+      <div class="mt-1 flex gap-2">
+        <input type="url" id="import-url" placeholder="https://example.com/recipe" class={inputClass + " mt-0"} />
+        <button type="button" id="import-button" class={primaryButtonClass}>Import</button>
       </div>
-      <p id="import-message" class="message" role="status"></p>
+      <p id="import-message" class="message mt-2 min-h-5 text-sm" role="status"></p>
     </section>
   )}
 
-  <p id="form-message" class="message" role="alert"></p>
+  <p id="form-message" class="message mt-3 min-h-5 text-sm" role="alert"></p>
 
-  <label for="title">Title</label>
-  <input type="text" id="title" required />
+  <label for="title" class={labelClass}>Title</label>
+  <input type="text" id="title" required class={inputClass} />
 
-  <label for="tags">Tags (comma separated)</label>
-  <input type="text" id="tags" />
+  <label for="tags" class={labelClass}>Tags (comma separated)</label>
+  <input type="text" id="tags" class={inputClass} />
 
-  <div class="grid">
+  <div class="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
     <div>
-      <label for="servings">Servings</label>
-      <input type="text" id="servings" />
+      <label for="servings" class="block text-sm font-medium">Servings</label>
+      <input type="text" id="servings" class={inputClass} />
     </div>
     <div>
-      <label for="prepTime">Prep time</label>
-      <input type="text" id="prepTime" />
+      <label for="prepTime" class="block text-sm font-medium">Prep time</label>
+      <input type="text" id="prepTime" class={inputClass} />
     </div>
     <div>
-      <label for="cookTime">Cook time</label>
-      <input type="text" id="cookTime" />
+      <label for="cookTime" class="block text-sm font-medium">Cook time</label>
+      <input type="text" id="cookTime" class={inputClass} />
     </div>
   </div>
 
-  <label for="image">Image URL</label>
-  <input type="url" id="image" />
+  <label for="image" class={labelClass}>Image URL</label>
+  <input type="url" id="image" class={inputClass} />
 
-  <label for="sourceUrl">Source URL</label>
-  <input type="url" id="sourceUrl" />
+  <label for="sourceUrl" class={labelClass}>Source URL</label>
+  <input type="url" id="sourceUrl" class={inputClass} />
 
-  <fieldset>
-    <legend>Ingredients</legend>
+  <fieldset class="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+    <legend class="px-1 text-sm font-semibold">Ingredients</legend>
     <div id="ingredients-list"></div>
-    <button type="button" id="add-ingredient">+ Add ingredient</button>
+    <button type="button" id="add-ingredient" class={primaryButtonClass + " mt-2"}>+ Add ingredient</button>
   </fieldset>
 
-  <fieldset>
-    <legend>Instructions</legend>
+  <fieldset class="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+    <legend class="px-1 text-sm font-semibold">Instructions</legend>
     <div id="instructions-list"></div>
-    <button type="button" id="add-instruction">+ Add step</button>
+    <button type="button" id="add-instruction" class={primaryButtonClass + " mt-2"}>+ Add step</button>
   </fieldset>
 
-  <fieldset>
-    <legend>Nutrition (per serving)</legend>
-    <div class="grid">
-      <div><label for="nutrition-calories">Calories</label><input id="nutrition-calories" /></div>
-      <div><label for="nutrition-protein">Protein</label><input id="nutrition-protein" /></div>
-      <div><label for="nutrition-fat">Fat</label><input id="nutrition-fat" /></div>
-      <div><label for="nutrition-carbohydrates">Carbs</label><input id="nutrition-carbohydrates" /></div>
-      <div><label for="nutrition-fiber">Fiber</label><input id="nutrition-fiber" /></div>
-      <div><label for="nutrition-sugar">Sugar</label><input id="nutrition-sugar" /></div>
-      <div><label for="nutrition-sodium">Sodium</label><input id="nutrition-sodium" /></div>
+  <fieldset class="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+    <legend class="px-1 text-sm font-semibold">Nutrition (per serving)</legend>
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
+      <div><label for="nutrition-calories" class="block text-sm font-medium">Calories</label><input id="nutrition-calories" class={inputClass} /></div>
+      <div><label for="nutrition-protein" class="block text-sm font-medium">Protein</label><input id="nutrition-protein" class={inputClass} /></div>
+      <div><label for="nutrition-fat" class="block text-sm font-medium">Fat</label><input id="nutrition-fat" class={inputClass} /></div>
+      <div><label for="nutrition-carbohydrates" class="block text-sm font-medium">Carbs</label><input id="nutrition-carbohydrates" class={inputClass} /></div>
+      <div><label for="nutrition-fiber" class="block text-sm font-medium">Fiber</label><input id="nutrition-fiber" class={inputClass} /></div>
+      <div><label for="nutrition-sugar" class="block text-sm font-medium">Sugar</label><input id="nutrition-sugar" class={inputClass} /></div>
+      <div><label for="nutrition-sodium" class="block text-sm font-medium">Sodium</label><input id="nutrition-sodium" class={inputClass} /></div>
     </div>
   </fieldset>
 
-  <label for="notes">Notes</label>
-  <textarea id="notes"></textarea>
+  <label for="notes" class={labelClass}>Notes</label>
+  <textarea id="notes" class={inputClass}></textarea>
 
-  <div class="form-actions">
-    <button type="submit" id="save-button">Save recipe</button>
-    {mode === "edit" && <button type="button" id="delete-button" class="danger">Delete</button>}
+  <div class="mt-6 flex gap-2">
+    <button type="submit" id="save-button" class={primaryButtonClass}>Save recipe</button>
+    {mode === "edit" && <button type="button" id="delete-button" class={dangerButtonClass}>Delete</button>}
   </div>
 </form>
 

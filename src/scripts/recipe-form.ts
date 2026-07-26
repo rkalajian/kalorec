@@ -29,16 +29,20 @@ const initial: FormData_ = JSON.parse(dataScript.textContent || "{}");
 const ingredientsList = document.getElementById("ingredients-list")!;
 const instructionsList = document.getElementById("instructions-list")!;
 
+const rowInputClass = "flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const removeButtonClass = "rounded-md border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800";
+
 function addRow(container: HTMLElement, kind: "ingredient" | "instruction", value = "") {
   const row = document.createElement("div");
-  row.className = "row";
+  row.className = "mt-2 flex gap-2";
   const input = document.createElement("input");
   input.type = "text";
   input.value = value;
-  input.className = `${kind}-input`;
+  input.className = `${kind}-input ${rowInputClass}`;
   input.placeholder = kind === "ingredient" ? "e.g. 2 cups flour" : "e.g. Preheat oven to 350°F";
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
+  removeBtn.className = removeButtonClass;
   removeBtn.textContent = "Remove";
   removeBtn.addEventListener("click", () => row.remove());
   row.append(input, removeBtn);
@@ -91,11 +95,16 @@ function collectRows(container: HTMLElement, kind: "ingredient" | "instruction")
 
 type MessageKind = "info" | "warning" | "error";
 
+const messageKindClasses: Record<"warning" | "error", string[]> = {
+  warning: ["text-amber-600", "dark:text-amber-400"],
+  error: ["text-red-600", "dark:text-red-400"],
+};
+
 function showMessage(id: string, text: string, kind: MessageKind = "info") {
   const el = document.getElementById(id)!;
   el.textContent = text;
-  el.classList.remove("error", "warning");
-  if (kind !== "info") el.classList.add(kind);
+  el.classList.remove(...messageKindClasses.warning, ...messageKindClasses.error);
+  if (kind !== "info") el.classList.add(...messageKindClasses[kind]);
 }
 
 const importButton = document.getElementById("import-button");
