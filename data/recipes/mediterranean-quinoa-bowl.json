@@ -2,7 +2,10 @@
   "slug": "mediterranean-quinoa-bowl",
   "title": "Mediterranean Quinoa Bowl",
   "image": "https://cdn.loveandlemons.com/wp-content/uploads/2023/05/quinoa-bowl-500x500.jpg",
-  "tags": [],
+  "tags": [
+    "dinner",
+    "beans"
+  ],
   "servings": "6",
   "prepTime": "20m",
   "cookTime": "20m",
@@ -36,5 +39,5 @@
   },
   "notes": "Add a creamy ranch or Tzatziki on top!",
   "createdAt": "2026-07-26T16:44:29.018Z",
-  "updatedAt": "2026-07-26T16:44:29.018Z"
+  "updatedAt": "2026-07-26T16:49:27.172Z"
 }
