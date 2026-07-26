@@ -12,6 +12,6 @@ if (!stored) {
 }
 ---
 <Layout title={`Edit ${stored.recipe.title}`}>
-  <h1>Edit {stored.recipe.title}</h1>
+  <h1 class="text-2xl font-semibold tracking-tight">Edit {stored.recipe.title}</h1>
   <RecipeForm mode="edit" recipe={stored.recipe} sha={stored.sha} />
 </Layout>
