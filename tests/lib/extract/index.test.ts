@@ -37,4 +37,50 @@ describe("extractRecipeFromUrl", () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("network down"); }));
     await expect(extractRecipeFromUrl("https://example.com/down")).rejects.toThrow(/network down/);
   });
+
+  it("rejects a non-http(s) scheme without calling fetch", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(extractRecipeFromUrl("file:///etc/passwd")).rejects.toThrow(/scheme/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a loopback hostname without calling fetch", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(extractRecipeFromUrl("http://127.0.0.1/x")).rejects.toThrow(/private|internal/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects the localhost hostname without calling fetch", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(extractRecipeFromUrl("http://localhost/x")).rejects.toThrow(/private|internal/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects private RFC1918 and link-local ranges", async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    for (const url of ["http://10.0.0.5/x", "http://172.16.0.1/x", "http://192.168.1.1/x", "http://169.254.169.254/x"]) {
+      await expect(extractRecipeFromUrl(url)).rejects.toThrow(/private|internal/i);
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a response whose Content-Length exceeds the size cap", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(jsonLdHtml, { status: 200, headers: { "content-length": String(10 * 1024 * 1024) } }))
+    );
+    await expect(extractRecipeFromUrl("https://example.com/huge")).rejects.toThrow(/size/i);
+  });
+
+  it("passes an AbortSignal to fetch for the timeout", async () => {
+    const fetchMock = vi.fn(async (..._args: unknown[]) => new Response(jsonLdHtml, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await extractRecipeFromUrl("https://example.com/soup");
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    expect(init?.signal).toBeInstanceOf(AbortSignal);
+  });
 });

@@ -80,6 +80,60 @@ describe("POST /api/recipes", () => {
     } as any);
     expect(response.status).toBe(400);
   });
+
+  it("dedupes case-insensitive tags", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", {
+        title: "Chili",
+        tags: ["dinner", "Dinner", " DINNER "],
+      }),
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ tags: ["dinner"] }));
+  });
+
+  it("collapses an all-empty nutrition object to undefined", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", {
+        title: "Chili",
+        nutrition: { calories: "", protein: "", fat: "", carbohydrates: "", fiber: "", sugar: "", sodium: "" },
+      }),
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ nutrition: undefined }));
+  });
+
+  it("drops empty-string optional fields instead of persisting them", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", {
+        title: "Chili",
+        servings: "",
+        prepTime: "",
+      }),
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(
+      expect.objectContaining({ servings: undefined, prepTime: undefined })
+    );
+  });
+
+  it("coerces non-string ingredients/instructions to trimmed strings", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", {
+        title: "Chili",
+        ingredients: [1, "  2 cups flour  "],
+        instructions: [true],
+      }),
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(
+      expect.objectContaining({ ingredients: ["1", "2 cups flour"], instructions: ["true"] })
+    );
+  });
 });
 
 describe("PUT /api/recipes/[slug]", () => {
@@ -142,6 +196,76 @@ describe("PUT /api/recipes/[slug]", () => {
       }),
     } as any);
     expect(response.status).toBe(400);
+  });
+
+  it("drops an empty-string field instead of preserving it (matches POST's normalization)", async () => {
+    mockStore.get.mockResolvedValue({
+      recipe: { ...existingRecipe, servings: "4" },
+      sha: "sha-1",
+    });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", {
+        title: "Chili",
+        servings: "",
+      }),
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(
+      expect.objectContaining({ servings: undefined }),
+      "sha-1"
+    );
+  });
+
+  it("collapses an all-empty nutrition object to undefined", async () => {
+    mockStore.get.mockResolvedValue({
+      recipe: { ...existingRecipe, nutrition: { calories: "200" } },
+      sha: "sha-1",
+    });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", {
+        title: "Chili",
+        nutrition: { calories: "", protein: "", fat: "", carbohydrates: "", fiber: "", sugar: "", sodium: "" },
+      }),
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(
+      expect.objectContaining({ nutrition: undefined }),
+      "sha-1"
+    );
+  });
+
+  it("dedupes case-insensitive tags", async () => {
+    mockStore.get.mockResolvedValue({ recipe: existingRecipe, sha: "sha-1" });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", {
+        title: "Chili",
+        tags: ["dinner", "Dinner"],
+      }),
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(
+      expect.objectContaining({ tags: ["dinner"] }),
+      "sha-1"
+    );
+  });
+
+  it("leaves a field untouched when omitted from the body entirely", async () => {
+    mockStore.get.mockResolvedValue({
+      recipe: { ...existingRecipe, servings: "4" },
+      sha: "sha-1",
+    });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Chili" }),
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(
+      expect.objectContaining({ servings: "4" }),
+      "sha-1"
+    );
   });
 });
 

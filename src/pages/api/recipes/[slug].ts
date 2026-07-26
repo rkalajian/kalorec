@@ -1,9 +1,6 @@
 import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
-
-function normalizeTags(tags: unknown): string[] | undefined {
-  return Array.isArray(tags) ? tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean) : undefined;
-}
+import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 
 export const PUT: APIRoute = async ({ params, request }) => {
   const slug = params.slug!;
@@ -31,19 +28,21 @@ export const PUT: APIRoute = async ({ params, request }) => {
 
   const updated = {
     ...existing.recipe,
-    title: body.title ?? existing.recipe.title,
-    sourceUrl: body.sourceUrl ?? existing.recipe.sourceUrl,
-    image: body.image ?? existing.recipe.image,
-    tags: normalizeTags(body.tags) ?? existing.recipe.tags,
-    servings: body.servings ?? existing.recipe.servings,
-    prepTime: body.prepTime ?? existing.recipe.prepTime,
-    cookTime: body.cookTime ?? existing.recipe.cookTime,
-    ingredients: Array.isArray(body.ingredients) ? body.ingredients.filter(Boolean) : existing.recipe.ingredients,
+    title: body.title !== undefined ? body.title.trim() : existing.recipe.title,
+    sourceUrl: body.sourceUrl !== undefined ? normalizeText(body.sourceUrl) : existing.recipe.sourceUrl,
+    image: body.image !== undefined ? normalizeText(body.image) : existing.recipe.image,
+    tags: body.tags !== undefined ? normalizeTags(body.tags) : existing.recipe.tags,
+    servings: body.servings !== undefined ? normalizeText(body.servings) : existing.recipe.servings,
+    prepTime: body.prepTime !== undefined ? normalizeText(body.prepTime) : existing.recipe.prepTime,
+    cookTime: body.cookTime !== undefined ? normalizeText(body.cookTime) : existing.recipe.cookTime,
+    ingredients: Array.isArray(body.ingredients)
+      ? normalizeStringList(body.ingredients)
+      : existing.recipe.ingredients,
     instructions: Array.isArray(body.instructions)
-      ? body.instructions.filter(Boolean)
+      ? normalizeStringList(body.instructions)
       : existing.recipe.instructions,
-    nutrition: body.nutrition ?? existing.recipe.nutrition,
-    notes: body.notes ?? existing.recipe.notes,
+    nutrition: body.nutrition !== undefined ? normalizeNutrition(body.nutrition) : existing.recipe.nutrition,
+    notes: body.notes !== undefined ? normalizeText(body.notes) : existing.recipe.notes,
     updatedAt: new Date().toISOString(),
   };
 

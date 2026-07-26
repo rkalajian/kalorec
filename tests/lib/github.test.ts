@@ -37,6 +37,66 @@ describe("RecipeStore", () => {
     expect(recipes).toEqual([sampleRecipe]);
   });
 
+  it("skips a file that fails to parse and still returns the other valid recipes", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const client = {
+      repos: {
+        getContent: vi.fn(async ({ path }: { path: string }) => {
+          if (path === "data/recipes") {
+            return {
+              data: [
+                { type: "file", name: "chili.json", path: "data/recipes/chili.json" },
+                { type: "file", name: "broken.json", path: "data/recipes/broken.json" },
+              ],
+            };
+          }
+          if (path === "data/recipes/broken.json") {
+            return { data: { type: "file", content: Buffer.from("{not valid json").toString("base64"), sha: "sha-2" } };
+          }
+          return { data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } };
+        }),
+        createOrUpdateFileContents: vi.fn(),
+        deleteFile: vi.fn(),
+      },
+    };
+    const store = new RecipeStore(client as any, config);
+    const recipes = await store.list();
+    expect(recipes).toEqual([sampleRecipe]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
+  it("skips a file that 500s while still returning the other valid recipes", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const client = {
+      repos: {
+        getContent: vi.fn(async ({ path }: { path: string }) => {
+          if (path === "data/recipes") {
+            return {
+              data: [
+                { type: "file", name: "chili.json", path: "data/recipes/chili.json" },
+                { type: "file", name: "flaky.json", path: "data/recipes/flaky.json" },
+              ],
+            };
+          }
+          if (path === "data/recipes/flaky.json") {
+            const err: any = new Error("Internal Server Error");
+            err.status = 500;
+            throw err;
+          }
+          return { data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } };
+        }),
+        createOrUpdateFileContents: vi.fn(),
+        deleteFile: vi.fn(),
+      },
+    };
+    const store = new RecipeStore(client as any, config);
+    const recipes = await store.list();
+    expect(recipes).toEqual([sampleRecipe]);
+    expect(warnSpy).toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("returns an empty list when the directory does not exist", async () => {
     const client = {
       repos: {

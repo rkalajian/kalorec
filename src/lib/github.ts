@@ -54,10 +54,19 @@ export class RecipeStore {
       throw err;
     }
     const files = entries.filter((e) => e.type === "file" && e.name.endsWith(".json"));
-    const results = await Promise.all(
+    const settled = await Promise.allSettled(
       files.map((f) => this.get(f.name.replace(/\.json$/, "")))
     );
-    return results.filter((r): r is StoredRecipe => r !== null).map((r) => r.recipe);
+    const recipes: Recipe[] = [];
+    settled.forEach((outcome, i) => {
+      if (outcome.status === "fulfilled") {
+        if (outcome.value) recipes.push(outcome.value.recipe);
+      } else {
+        const reason = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason);
+        console.warn(`Skipping recipe file ${files[i]?.name}: ${reason}`);
+      }
+    });
+    return recipes;
   }
 
   async get(slug: string): Promise<StoredRecipe | null> {

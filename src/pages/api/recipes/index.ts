@@ -1,12 +1,7 @@
 import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
 import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
-
-function normalizeTags(tags: unknown): string[] {
-  return Array.isArray(tags)
-    ? tags.map((t) => String(t).trim().toLowerCase()).filter(Boolean)
-    : [];
-}
+import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 
 export const POST: APIRoute = async ({ request }) => {
   let body: any;
@@ -26,17 +21,17 @@ export const POST: APIRoute = async ({ request }) => {
 
   const recipe: Recipe = {
     slug,
-    title: body.title,
-    sourceUrl: body.sourceUrl || undefined,
-    image: body.image || undefined,
+    title: body.title.trim(),
+    sourceUrl: normalizeText(body.sourceUrl),
+    image: normalizeText(body.image),
     tags: normalizeTags(body.tags),
-    servings: body.servings || undefined,
-    prepTime: body.prepTime || undefined,
-    cookTime: body.cookTime || undefined,
-    ingredients: Array.isArray(body.ingredients) ? body.ingredients.filter(Boolean) : [],
-    instructions: Array.isArray(body.instructions) ? body.instructions.filter(Boolean) : [],
-    nutrition: body.nutrition || undefined,
-    notes: body.notes || undefined,
+    servings: normalizeText(body.servings),
+    prepTime: normalizeText(body.prepTime),
+    cookTime: normalizeText(body.cookTime),
+    ingredients: normalizeStringList(body.ingredients),
+    instructions: normalizeStringList(body.instructions),
+    nutrition: normalizeNutrition(body.nutrition),
+    notes: normalizeText(body.notes),
     createdAt: now,
     updatedAt: now,
   };
