@@ -3,7 +3,10 @@
   "title": "Dutch Oven Carnitas",
   "sourceUrl": "https://wellfedbaker.com/dutch-oven-carnitas/",
   "image": "https://wellfedbaker.com/wp-content/uploads/2024/04/dutch-oven-carnitas-11.jpg",
-  "tags": [],
+  "tags": [
+    "dinner",
+    "pork"
+  ],
   "servings": "6",
   "prepTime": "30m",
   "cookTime": "210m",
@@ -45,5 +48,5 @@
     "sodium": "1238 mg"
   },
   "createdAt": "2026-07-26T20:05:57.218Z",
-  "updatedAt": "2026-07-26T20:05:57.218Z"
+  "updatedAt": "2026-07-26T20:21:52.777Z"
 }
