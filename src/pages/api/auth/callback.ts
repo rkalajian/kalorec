@@ -11,26 +11,33 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
     return redirect("/api/auth/login?error=state_mismatch");
   }
 
-  const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      client_id: import.meta.env.GITHUB_CLIENT_ID,
-      client_secret: import.meta.env.GITHUB_CLIENT_SECRET,
-      code,
-    }),
-  });
-  const tokenData = await tokenRes.json().catch(() => null);
-  const accessToken = tokenData?.access_token;
-  if (!tokenRes.ok || !accessToken) {
-    return redirect("/api/auth/login?error=token_exchange_failed");
-  }
+  let accessToken: string | undefined;
+  let userLogin: string | undefined;
+  try {
+    const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({
+        client_id: import.meta.env.GITHUB_CLIENT_ID,
+        client_secret: import.meta.env.GITHUB_CLIENT_SECRET,
+        code,
+      }),
+    });
+    const tokenData = await tokenRes.json().catch(() => null);
+    accessToken = tokenData?.access_token;
+    if (!tokenRes.ok || !accessToken) {
+      return redirect("/api/auth/login?error=token_exchange_failed");
+    }
 
-  const userRes = await fetch("https://api.github.com/user", {
-    headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/vnd.github+json" },
-  });
-  const userData = await userRes.json().catch(() => null);
-  if (!userRes.ok || !userData?.login) {
+    const userRes = await fetch("https://api.github.com/user", {
+      headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/vnd.github+json" },
+    });
+    const userData = await userRes.json().catch(() => null);
+    if (!userRes.ok || !userData?.login) {
+      return redirect("/api/auth/login?error=token_exchange_failed");
+    }
+    userLogin = userData.login;
+  } catch {
     return redirect("/api/auth/login?error=token_exchange_failed");
   }
 
@@ -38,8 +45,8 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   const previousSession = previousCookie ? decryptSession(previousCookie, import.meta.env.SESSION_SECRET) : null;
 
   const session: Session = {
-    githubLogin: userData.login,
-    accessToken,
+    githubLogin: userLogin!,
+    accessToken: accessToken!,
     repo: previousSession?.repo ?? null,
   };
 

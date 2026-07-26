@@ -61,6 +61,17 @@ describe("GET /api/auth/callback", () => {
     expect(response.headers.get("Location")).toBe("/api/auth/login?error=token_exchange_failed");
   });
 
+  it("redirects to login with an error when the token exchange fetch rejects (network failure)", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockRejectedValueOnce(new Error("network error"))
+    );
+    const { GET } = await import("../../../../src/pages/api/auth/callback");
+    const { context } = fakeContext({ code: "abc", state: "right", cookieState: "right" });
+    const response = await GET(context as any);
+    expect(response.headers.get("Location")).toBe("/api/auth/login?error=token_exchange_failed");
+  });
+
   it("on success, stores a session cookie and redirects to /settings when no repo is chosen yet", async () => {
     const fetchMock = vi
       .fn()
