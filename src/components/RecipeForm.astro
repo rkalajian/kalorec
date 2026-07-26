@@ -22,8 +22,10 @@ const initial = {
   notes: recipe?.notes ?? "",
 };
 
-const labelClass = "mt-3 block text-sm font-medium";
-const inputClass = "mt-1 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const tightLabelClass = "block text-sm font-medium";
+const labelClass = "mt-3 " + tightLabelClass;
+const inputBase = "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+const inputClass = "mt-1 " + inputBase;
 const primaryButtonClass = "inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800";
 const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700";
 ---
@@ -32,9 +34,9 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
 
   {mode === "create" && (
     <section class="rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
-      <label for="import-url" class="block text-sm font-medium">Import from link</label>
+      <label for="import-url" class={tightLabelClass}>Import from link</label>
       <div class="mt-1 flex gap-2">
-        <input type="url" id="import-url" placeholder="https://example.com/recipe" class={inputClass + " mt-0"} />
+        <input type="url" id="import-url" placeholder="https://example.com/recipe" class={inputBase} />
         <button type="button" id="import-button" class={primaryButtonClass}>Import</button>
       </div>
       <p id="import-message" class="message mt-2 min-h-5 text-sm" role="status"></p>
@@ -51,15 +53,15 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
 
   <div class="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
     <div>
-      <label for="servings" class="block text-sm font-medium">Servings</label>
+      <label for="servings" class={tightLabelClass}>Servings</label>
       <input type="text" id="servings" class={inputClass} />
     </div>
     <div>
-      <label for="prepTime" class="block text-sm font-medium">Prep time</label>
+      <label for="prepTime" class={tightLabelClass}>Prep time</label>
       <input type="text" id="prepTime" class={inputClass} />
     </div>
     <div>
-      <label for="cookTime" class="block text-sm font-medium">Cook time</label>
+      <label for="cookTime" class={tightLabelClass}>Cook time</label>
       <input type="text" id="cookTime" class={inputClass} />
     </div>
   </div>
@@ -85,13 +87,13 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
   <fieldset class="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
     <legend class="px-1 text-sm font-semibold">Nutrition (per serving)</legend>
     <div class="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
-      <div><label for="nutrition-calories" class="block text-sm font-medium">Calories</label><input id="nutrition-calories" class={inputClass} /></div>
-      <div><label for="nutrition-protein" class="block text-sm font-medium">Protein</label><input id="nutrition-protein" class={inputClass} /></div>
-      <div><label for="nutrition-fat" class="block text-sm font-medium">Fat</label><input id="nutrition-fat" class={inputClass} /></div>
-      <div><label for="nutrition-carbohydrates" class="block text-sm font-medium">Carbs</label><input id="nutrition-carbohydrates" class={inputClass} /></div>
-      <div><label for="nutrition-fiber" class="block text-sm font-medium">Fiber</label><input id="nutrition-fiber" class={inputClass} /></div>
-      <div><label for="nutrition-sugar" class="block text-sm font-medium">Sugar</label><input id="nutrition-sugar" class={inputClass} /></div>
-      <div><label for="nutrition-sodium" class="block text-sm font-medium">Sodium</label><input id="nutrition-sodium" class={inputClass} /></div>
+      <div><label for="nutrition-calories" class={tightLabelClass}>Calories</label><input id="nutrition-calories" class={inputClass} /></div>
+      <div><label for="nutrition-protein" class={tightLabelClass}>Protein</label><input id="nutrition-protein" class={inputClass} /></div>
+      <div><label for="nutrition-fat" class={tightLabelClass}>Fat</label><input id="nutrition-fat" class={inputClass} /></div>
+      <div><label for="nutrition-carbohydrates" class={tightLabelClass}>Carbs</label><input id="nutrition-carbohydrates" class={inputClass} /></div>
+      <div><label for="nutrition-fiber" class={tightLabelClass}>Fiber</label><input id="nutrition-fiber" class={inputClass} /></div>
+      <div><label for="nutrition-sugar" class={tightLabelClass}>Sugar</label><input id="nutrition-sugar" class={inputClass} /></div>
+      <div><label for="nutrition-sodium" class={tightLabelClass}>Sodium</label><input id="nutrition-sodium" class={inputClass} /></div>
     </div>
   </fieldset>
 
