@@ -3,7 +3,10 @@
   "title": "Easy Vegan Chipotle Sauce Recipe",
   "sourceUrl": "https://sweetsimplevegan.com/easy-chipotle-crema/",
   "image": "https://sweetsimplevegan.com/wp-content/uploads/2020/12/bowl-of-easy-chipotle-crema-with-spoon-sweet-simple-vegan-225x225.jpg",
-  "tags": [],
+  "tags": [
+    "accessory",
+    "vegan"
+  ],
   "servings": "32",
   "prepTime": "20m",
   "ingredients": [
@@ -29,5 +32,5 @@
     "sodium": "73.8 mg"
   },
   "createdAt": "2026-07-26T13:45:55.193Z",
-  "updatedAt": "2026-07-26T13:45:55.193Z"
+  "updatedAt": "2026-07-26T13:47:29.172Z"
 }
