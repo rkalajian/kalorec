@@ -1,4 +1,5 @@
 ---
+import { Image } from "astro:assets";
 import type { Recipe } from "../lib/recipe";
 
 interface Props {
@@ -12,7 +13,7 @@ const { recipe } = Astro.props;
   data-tags={recipe.tags.join(",")}
   data-title={recipe.title.toLowerCase()}
 >
-  {recipe.image && <img src={recipe.image} alt="" class="mb-3 h-36 w-full rounded-md object-cover" />}
+  {recipe.image && <Image src={recipe.image} inferSize alt="" class="mb-3 h-36 w-full rounded-md object-cover" />}
   <h3 class="font-semibold text-zinc-900 dark:text-zinc-100">{recipe.title}</h3>
   <ul class="mt-2 flex list-none flex-wrap gap-1.5 p-0">
     {recipe.tags.map((tag) => (
