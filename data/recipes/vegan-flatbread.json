@@ -3,7 +3,8 @@
   "title": "Vegan Flatbread",
   "tags": [
     "bread",
-    "accessory"
+    "accessory",
+    "vegan"
   ],
   "servings": "12",
   "prepTime": "45m",
@@ -24,7 +25,7 @@
     "Keep warm: Stack cooked flatbreads and keep wrapped in a tea towel — the moisture softens the surface and makes them more pliable."
   ],
   "createdAt": "2026-07-26T11:14:01.282Z",
-  "updatedAt": "2026-07-26T13:17:28.535Z",
+  "updatedAt": "2026-07-26T13:19:14.978Z",
   "nutrition": {
     "calories": "185 kcal",
     "protein": "4.05g",
