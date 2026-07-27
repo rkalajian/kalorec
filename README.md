@@ -37,5 +37,5 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 - Add a recipe → confirm the commit lands in `data/recipes/<slug>.json` in the chosen repo/branch on GitHub.
 - Edit and delete that recipe → confirm both operations commit to the same repo.
 - Click your GitHub login in the header → back on `/settings`; pick a different repo → confirm you're redirected home and now see that repo's (empty) recipe list.
-- Log out → session cookie cleared, redirected to `/api/auth/login`.
+- Log out → session cookie cleared, redirected to `/logged-out` (a session-independent page with its own "Log in with GitHub" link — not straight back into `/api/auth/login`, which would silently re-authenticate via GitHub's already-authorized OAuth flow).
 - Simulate a revoked/expired token (e.g. revoke the OAuth App's access from your GitHub account settings) and try loading `/` → confirm a GitHub 401 bounces you back to login instead of crashing the page.
