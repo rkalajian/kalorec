@@ -1,0 +1,40 @@
+{
+  "slug": "red-beans-and-rice",
+  "title": "Red Beans and Rice",
+  "image": "https://imgs.search.brave.com/X8bqh86sSZ3eYwKb92R3Iz5V8UDT-ykRCaoEICKZ_Os/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly90aGVj/YWdsZWRpYXJpZXMu/Y29tL3dwLWNvbnRl/bnQvdXBsb2Fkcy8y/MDIyLzEyL1JlZC1C/ZWFucy1hbmQtUmlj/ZS1XaXRoLUhhbS1I/b2Nrcy1IZXJvLTEu/anBn",
+  "tags": [
+    "dinner",
+    "beans",
+    "ham"
+  ],
+  "servings": "8",
+  "prepTime": "10",
+  "cookTime": "45",
+  "ingredients": [
+    "2 tbsp olive oil",
+    "1 onion, chopped",
+    "1 bell pepper, chopped",
+    "4 tsp dried oregano",
+    "1/2 cup tomato sauce",
+    "4 cans kidney beans",
+    "1lb ham steak",
+    "2 tsp Adobo or Sazon con Azafran"
+  ],
+  "instructions": [
+    "Heat oil over medium heat and sauté onions until soft",
+    "Add peppers and continue to sauté until soft and onions are browned",
+    "Add in beans, tomato sauce, oregano, ham, and Adobo and simmer for around 30 minutes"
+  ],
+  "nutrition": {
+    "calories": "305g",
+    "protein": "25g",
+    "fat": "7g",
+    "carbohydrates": "39g",
+    "fiber": "11.5g",
+    "sugar": "3g",
+    "sodium": "1,415mg"
+  },
+  "notes": "Makes 8 servings. Each serving is around 1.25 cups. Serve over rice.",
+  "createdAt": "2026-08-06T17:31:06.786Z",
+  "updatedAt": "2026-08-06T17:31:06.786Z"
+}
