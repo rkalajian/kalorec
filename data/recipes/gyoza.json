@@ -27,7 +27,7 @@
     "Steam, air fry, or pan fry"
   ],
   "createdAt": "2026-07-26T20:11:03.778Z",
-  "updatedAt": "2026-07-26T20:20:40.992Z",
+  "updatedAt": "2026-08-10T18:52:39.261Z",
   "image": "https://imgs.search.brave.com/osjIrZ1xXWB-_G9SSdwwzTSppY0ONMqI7hfTg3fpYvE/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTI4/OTA0MDY0MS9waG90/by9mcmllZC1neW96/YS1kdW1wbGluZ3Mt/d2l0aC1wb3JrLXNl/cnZlZC13aXRoLXNv/eS1zYXVjZS1hbmQt/c2NhbGxpb25zLmpw/Zz9zPTYxMng2MTIm/dz0wJms9MjAmYz14/QVMzcDhIOFRYUDhN/X2ZXaHpTSXNBSUlG/ZFV0ZjdsZHVUdzBy/M2EyVmVjPQ",
   "servings": "16",
   "prepTime": "30m",
@@ -39,5 +39,6 @@
     "carbohydrates": "23",
     "fiber": "2",
     "sodium": "420"
-  }
+  },
+  "public": true
 }
