@@ -8,6 +8,7 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 - Server-side routes read/write that repo via the GitHub API, using your own OAuth access token — no database, and no shared credentials between users.
 - Pasting a link parses the page's `schema.org/Recipe` structured data when present, falling back to a best-effort heuristic extraction otherwise.
 - Mark a recipe public to expose it, read-only, at `/u/<owner>/<repo>` (and `/u/<owner>/<repo>/<slug>` for the recipe itself) — no login required to view. This only works if the chosen repo is public on GitHub; public pages read it unauthenticated. Any logged-in visitor can copy a shared recipe into their own repo from there.
+- Anonymous visitors land on a public homepage at `/` — a pitch for the app, a "Log in with GitHub" button, and a "View a shared profile" box that jumps straight to a `/u/<owner>/<repo>` link (paste a share link or type `owner/repo`). `/about` and `/how-to-use` are always reachable from the header nav, logged in or out.
 
 ## Setup
 
@@ -32,8 +33,12 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 
 ## Manual QA checklist
 
-- Visit the app while logged out → redirected to `/api/auth/login` → GitHub authorize page.
+- Visit the app while logged out → the public homepage at `/` (pitch + "Log in with GitHub" + "View a shared profile" box), not an instant redirect to GitHub.
+- In the "View a shared profile" box, paste a known public profile's share link (or type `owner/repo`) and click View → lands on `/u/<owner>/<repo>`. Try garbage input → inline error, no navigation.
+- Visit `/about` and `/how-to-use` while logged out → both render with the anonymous nav (About / How to Use / Log in).
+- Click "Log in with GitHub" → redirected to `/api/auth/login` → GitHub authorize page.
 - Authorize → redirected to `/api/auth/callback` → since no repo is chosen yet, redirected to `/settings`.
+- Before picking a repo, try loading `/` directly → still redirected to `/settings` (the public homepage only shows for logged-out visitors, never a logged-in user without a repo chosen).
 - `/settings` lists your GitHub repos; picking one redirects to `/` and shows your recipes (empty list on a fresh repo).
 - Add a recipe → confirm the commit lands in `data/recipes/<slug>.json` in the chosen repo/branch on GitHub.
 - Edit and delete that recipe → confirm both operations commit to the same repo.
