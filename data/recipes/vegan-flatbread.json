@@ -25,7 +25,7 @@
     "Keep warm: Stack cooked flatbreads and keep wrapped in a tea towel — the moisture softens the surface and makes them more pliable."
   ],
   "createdAt": "2026-07-26T11:14:01.282Z",
-  "updatedAt": "2026-07-26T13:19:14.978Z",
+  "updatedAt": "2026-08-10T18:53:44.846Z",
   "nutrition": {
     "calories": "185 kcal",
     "protein": "4.05g",
@@ -35,5 +35,6 @@
     "sugar": "1.1g",
     "sodium": "193mg"
   },
-  "image": "https://www.jocooks.com/wp-content/uploads/2021/01/no-yeast-flatbread-1-10.jpg"
+  "image": "https://www.jocooks.com/wp-content/uploads/2021/01/no-yeast-flatbread-1-10.jpg",
+  "public": true
 }
