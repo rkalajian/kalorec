@@ -3,54 +3,91 @@ import Layout from "../layouts/Layout.astro";
 import RecipeCard from "../components/RecipeCard.astro";
 import { getStore } from "../lib/store";
 import { SESSION_COOKIE } from "../lib/session";
+import type { Recipe } from "../lib/recipe";
 
-const store = getStore({ accessToken: Astro.locals.session.accessToken, repo: Astro.locals.session.repo! });
+// Astro.locals.session is typed as always-present, but the routing rule for
+// "/" now lets anonymous visitors through to see the landing page below
+// instead of the recipe list.
+const { session } = Astro.locals;
 
-let recipes;
-try {
-  recipes = await store.list();
-} catch (err: any) {
-  if (err.status === 401) {
-    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
-    return Astro.redirect("/logged-out?error=session_expired");
+let recipes: Recipe[] = [];
+let allTags: string[] = [];
+
+if (session) {
+  const store = getStore({ accessToken: session.accessToken, repo: session.repo! });
+  try {
+    recipes = await store.list();
+  } catch (err: any) {
+    if (err.status === 401) {
+      Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+      return Astro.redirect("/logged-out?error=session_expired");
+    }
+    if (err.status === 403) {
+      return Astro.redirect("/settings?error=no_access");
+    }
+    throw err;
   }
-  if (err.status === 403) {
-    return Astro.redirect("/settings?error=no_access");
-  }
-  throw err;
+  recipes.sort((a, b) => a.title.localeCompare(b.title));
+  allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
 }
-recipes.sort((a, b) => a.title.localeCompare(b.title));
-const allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
 ---
-<Layout title="Recipes">
-  <h1 class="text-2xl font-semibold tracking-tight">Recipes</h1>
+<Layout title={session ? "Recipes" : "Home"} session={session}>
+  {session ? (
+    <>
+      <h1 class="text-2xl font-semibold tracking-tight">Recipes</h1>
 
-  <div class="mt-4 flex flex-col gap-3">
-    <input
-      type="search"
-      id="search-input"
-      placeholder="Search recipes..."
-      class="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-    />
-    <div id="tag-filters" class="flex flex-wrap gap-1.5">
-      {allTags.map((tag) => (
-        <button
-          type="button"
-          aria-pressed="false"
-          class="tag-filter rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
-          data-tag={tag}
-        >{tag}</button>
-      ))}
-    </div>
-  </div>
+      <div class="mt-4 flex flex-col gap-3">
+        <input
+          type="search"
+          id="search-input"
+          placeholder="Search recipes..."
+          class="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        />
+        <div id="tag-filters" class="flex flex-wrap gap-1.5">
+          {allTags.map((tag) => (
+            <button
+              type="button"
+              aria-pressed="false"
+              class="tag-filter rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
+              data-tag={tag}
+            >{tag}</button>
+          ))}
+        </div>
+      </div>
 
-  {recipes.length === 0 ? (
-    <p class="mt-6 text-zinc-600 dark:text-zinc-400">No recipes yet. <a href="/recipes/new" class="text-green-700 dark:text-green-400">Add your first one</a>.</p>
+      {recipes.length === 0 ? (
+        <p class="mt-6 text-zinc-600 dark:text-zinc-400">No recipes yet. <a href="/recipes/new" class="text-green-700 dark:text-green-400">Add your first one</a>.</p>
+      ) : (
+        <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+          {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+        </div>
+      )}
+    </>
   ) : (
-    <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-      {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+    <div class="py-8">
+      <h1 class="text-3xl font-semibold tracking-tight">Your recipes, backed by your own GitHub repo</h1>
+      <p class="mt-4 max-w-xl text-zinc-600 dark:text-zinc-400">
+        Kalorec stores every recipe as a plain JSON file in a GitHub repo you choose — not a database you don't control. It's yours, portable, and versioned like the rest of your code.
+      </p>
+      <a href="/api/auth/login" class="mt-6 inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">Log in with GitHub</a>
+
+      <div class="mt-10 max-w-md rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
+        <label for="profile-lookup" class="block text-sm font-medium">View a shared profile</label>
+        <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Paste a profile link, or type <code>owner/repo</code>.</p>
+        <div class="mt-2 flex gap-2">
+          <input
+            type="text"
+            id="profile-lookup"
+            placeholder="owner/repo"
+            class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          />
+          <button type="button" id="profile-lookup-button" class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">View</button>
+        </div>
+        <p id="profile-lookup-message" class="mt-2 min-h-5 text-sm text-red-600 dark:text-red-400" role="alert"></p>
+      </div>
     </div>
   )}
 </Layout>
 
 <script src="../scripts/recipe-list.ts"></script>
+<script src="../scripts/profile-lookup.ts"></script>
