@@ -56,4 +56,33 @@ const error = Astro.url.searchParams.get("error");
       );
     })}
   </ul>
+  {session.repo && (
+    <section class="mt-8 rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
+      <h2 class="text-lg font-semibold tracking-tight">Share your profile</h2>
+      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+        Anyone with this link can view recipes you've marked public.
+      </p>
+      <div class="mt-3 flex gap-2">
+        <input
+          type="text"
+          id="share-link"
+          readonly
+          value={`${Astro.url.origin}/u/${session.repo.owner}/${session.repo.name}`}
+          class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+        />
+        <button
+          type="button"
+          id="copy-share-link"
+          class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+        >Copy</button>
+      </div>
+      {session.repo.private && (
+        <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
+          This repo is private on GitHub — the link above won't work until you make it public.
+        </p>
+      )}
+    </section>
+  )}
 </Layout>
+
+<script src="../scripts/settings.ts"></script>
