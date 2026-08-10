@@ -49,6 +49,7 @@ export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
     sourceUrl: body.sourceUrl !== undefined ? normalizeText(body.sourceUrl) : existing.recipe.sourceUrl,
     image: body.image !== undefined ? normalizeText(body.image) : existing.recipe.image,
     tags: body.tags !== undefined ? normalizeTags(body.tags) : existing.recipe.tags,
+    public: body.public !== undefined ? Boolean(body.public) : existing.recipe.public,
     servings: body.servings !== undefined ? normalizeText(body.servings) : existing.recipe.servings,
     prepTime: body.prepTime !== undefined ? normalizeText(body.prepTime) : existing.recipe.prepTime,
     cookTime: body.cookTime !== undefined ? normalizeText(body.cookTime) : existing.recipe.cookTime,

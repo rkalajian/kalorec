@@ -42,6 +42,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     sourceUrl: normalizeText(body.sourceUrl),
     image: normalizeText(body.image),
     tags: normalizeTags(body.tags),
+    public: Boolean(body.public),
     servings: normalizeText(body.servings),
     prepTime: normalizeText(body.prepTime),
     cookTime: normalizeText(body.cookTime),
