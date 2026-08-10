@@ -14,6 +14,7 @@ export interface Recipe {
   sourceUrl?: string;
   image?: string;
   tags: string[];
+  public?: boolean;
   servings?: string;
   prepTime?: string;
   cookTime?: string;

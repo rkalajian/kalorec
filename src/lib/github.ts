@@ -28,7 +28,7 @@ export interface GithubClient {
 export interface GithubStoreConfig {
   owner: string;
   repo: string;
-  branch: string;
+  branch?: string;
 }
 
 export interface StoredRecipe {
@@ -47,7 +47,12 @@ export class RecipeStore {
     const { owner, repo, branch } = this.config;
     let entries: any[];
     try {
-      const res = await this.client.repos.getContent({ owner, repo, path: RECIPES_DIR, ref: branch });
+      const res = await this.client.repos.getContent({
+        owner,
+        repo,
+        path: RECIPES_DIR,
+        ...(branch ? { ref: branch } : {}),
+      });
       entries = Array.isArray(res.data) ? res.data : [];
     } catch (err: any) {
       if (err.status === 404) return [];
@@ -72,7 +77,12 @@ export class RecipeStore {
   async get(slug: string): Promise<StoredRecipe | null> {
     const { owner, repo, branch } = this.config;
     try {
-      const res = await this.client.repos.getContent({ owner, repo, path: this.path(slug), ref: branch });
+      const res = await this.client.repos.getContent({
+        owner,
+        repo,
+        path: this.path(slug),
+        ...(branch ? { ref: branch } : {}),
+      });
       if (Array.isArray(res.data) || res.data.type !== "file") return null;
       const content = Buffer.from(res.data.content, "base64").toString("utf-8");
       return { recipe: JSON.parse(content) as Recipe, sha: res.data.sha };
@@ -87,7 +97,7 @@ export class RecipeStore {
     await this.client.repos.createOrUpdateFileContents({
       owner,
       repo,
-      branch,
+      branch: branch!,
       path: this.path(recipe.slug),
       message: `Add recipe: ${recipe.title}`,
       content: Buffer.from(JSON.stringify(recipe, null, 2)).toString("base64"),
@@ -100,7 +110,7 @@ export class RecipeStore {
     await this.client.repos.createOrUpdateFileContents({
       owner,
       repo,
-      branch,
+      branch: branch!,
       path: this.path(recipe.slug),
       message: `Update recipe: ${recipe.title}`,
       content: Buffer.from(JSON.stringify(recipe, null, 2)).toString("base64"),
@@ -113,7 +123,7 @@ export class RecipeStore {
     await this.client.repos.deleteFile({
       owner,
       repo,
-      branch,
+      branch: branch!,
       path: this.path(slug),
       message: `Delete recipe: ${title}`,
       sha,
