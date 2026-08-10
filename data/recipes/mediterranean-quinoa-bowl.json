@@ -4,7 +4,8 @@
   "image": "https://cdn.loveandlemons.com/wp-content/uploads/2023/05/quinoa-bowl-500x500.jpg",
   "tags": [
     "dinner",
-    "beans"
+    "beans",
+    "vegan"
   ],
   "servings": "6",
   "prepTime": "20m",
@@ -39,6 +40,6 @@
   },
   "notes": "Add a creamy ranch or Tzatziki on top!",
   "createdAt": "2026-07-26T16:44:29.018Z",
-  "updatedAt": "2026-08-10T18:53:07.727Z",
+  "updatedAt": "2026-08-10T18:59:14.332Z",
   "public": true
 }
