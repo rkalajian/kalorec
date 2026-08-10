@@ -23,6 +23,11 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/recipes/chili")).toBe(false);
     expect(isPublicPath("/api/recipes")).toBe(false);
   });
+
+  it("treats public profile pages as public", () => {
+    expect(isPublicPath("/u/rob/recipes")).toBe(true);
+    expect(isPublicPath("/u/rob/recipes/chili")).toBe(true);
+  });
 });
 
 describe("decideRoute", () => {
@@ -34,6 +39,11 @@ describe("decideRoute", () => {
     expect(decideRoute(null, "/api/auth/login")).toEqual({ proceed: true });
     expect(decideRoute(null, "/api/auth/callback")).toEqual({ proceed: true });
     expect(decideRoute(null, "/logged-out")).toEqual({ proceed: true });
+  });
+
+  it("proceeds on public profile pages even with no session", () => {
+    expect(decideRoute(null, "/u/rob/recipes")).toEqual({ proceed: true });
+    expect(decideRoute(null, "/u/rob/recipes/chili")).toEqual({ proceed: true });
   });
 
   it("proceeds on public paths even when a repo-less session exists", () => {

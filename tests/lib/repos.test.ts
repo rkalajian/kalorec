@@ -39,15 +39,15 @@ describe("listSelectableRepos", () => {
 });
 
 describe("resolveRepoSelection", () => {
-  it("returns owner/name/branch when push access is confirmed", async () => {
+  it("returns owner/name/branch/private when push access is confirmed", async () => {
     const client = {
       repos: {
         listForAuthenticatedUser: vi.fn(),
-        get: vi.fn(async () => ({ data: { default_branch: "main", permissions: { push: true } } })),
+        get: vi.fn(async () => ({ data: { default_branch: "main", private: true, permissions: { push: true } } })),
       },
     };
     const result = await resolveRepoSelection(client as any, "rob", "recipes");
-    expect(result).toEqual({ owner: "rob", name: "recipes", branch: "main" });
+    expect(result).toEqual({ owner: "rob", name: "recipes", branch: "main", private: true });
   });
 
   it("throws when the caller lacks push access", async () => {

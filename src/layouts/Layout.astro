@@ -1,11 +1,13 @@
 ---
 import "../styles/global.css";
+import type { Session } from "../lib/session";
 
 interface Props {
   title: string;
+  session?: Session | null;
 }
 const { title } = Astro.props;
-const { session } = Astro.locals;
+const session = Astro.props.session !== undefined ? Astro.props.session : Astro.locals.session;
 ---
 <!doctype html>
 <html lang="en">
@@ -18,11 +20,17 @@ const { session } = Astro.locals;
     <header class="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
       <a href="/" class="text-lg font-semibold tracking-tight text-zinc-900 no-underline dark:text-zinc-100">Recipes</a>
       <div class="flex items-center gap-3">
-        <a href="/recipes/new" class="inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">+ New Recipe</a>
-        <a href="/settings" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">{session.githubLogin}</a>
-        <form method="POST" action="/api/auth/logout">
-          <button type="submit" class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Log out</button>
-        </form>
+        {session ? (
+          <>
+            <a href="/recipes/new" class="inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">+ New Recipe</a>
+            <a href="/settings" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">{session.githubLogin}</a>
+            <form method="POST" action="/api/auth/logout">
+              <button type="submit" class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Log out</button>
+            </form>
+          </>
+        ) : (
+          <a href="/api/auth/login" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Log in</a>
+        )}
       </div>
     </header>
     <main class="mx-auto max-w-3xl p-6">

@@ -20,6 +20,7 @@ interface FormData_ {
   instructions: string[];
   nutrition: NutritionData;
   notes: string;
+  public: boolean;
 }
 
 const form = document.getElementById("recipe-form") as HTMLFormElement;
@@ -77,6 +78,7 @@ function fillForm(data: FormData_) {
   fillField("nutrition-fiber", data.nutrition.fiber);
   fillField("nutrition-sugar", data.nutrition.sugar);
   fillField("nutrition-sodium", data.nutrition.sodium);
+  (document.getElementById("public") as HTMLInputElement).checked = data.public;
   initial.ingredients = data.ingredients;
   initial.instructions = data.instructions;
   renderRows();
@@ -134,6 +136,7 @@ if (importButton) {
         instructions: json.recipe.instructions ?? [],
         nutrition: json.recipe.nutrition ?? {},
         notes: json.recipe.notes ?? "",
+        public: false,
       });
       showMessage(
         "import-message",
@@ -177,6 +180,7 @@ form.addEventListener("submit", async (event) => {
       sugar: (document.getElementById("nutrition-sugar") as HTMLInputElement).value.trim(),
       sodium: (document.getElementById("nutrition-sodium") as HTMLInputElement).value.trim(),
     },
+    public: (document.getElementById("public") as HTMLInputElement).checked,
     expectedSha: form.dataset.sha || undefined,
   };
 

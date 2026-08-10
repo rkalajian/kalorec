@@ -1,21 +1,43 @@
 import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
+import { getPublicRecipe } from "../../../lib/publicStore";
 import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
-import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 import { SESSION_COOKIE } from "../../../lib/session";
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
+  if (!locals.session.repo) {
+    return new Response(
+      JSON.stringify({ error: "Configure a recipe repo in Settings before copying recipes" }),
+      { status: 409 }
+    );
+  }
+
   let body: any;
   try {
     body = await request.json();
   } catch {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
-  if (!body.title || typeof body.title !== "string") {
-    return new Response(JSON.stringify({ error: "Title is required" }), { status: 400 });
+  if (
+    typeof body.owner !== "string" || !body.owner ||
+    typeof body.repo !== "string" || !body.repo ||
+    typeof body.slug !== "string" || !body.slug
+  ) {
+    return new Response(JSON.stringify({ error: "owner, repo, and slug are required" }), { status: 400 });
   }
 
-  const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo! });
+  let source: Recipe | null;
+  try {
+    source = await getPublicRecipe(body.owner, body.repo, body.slug);
+  } catch (err: any) {
+    return new Response(JSON.stringify({ error: `Failed to load source recipe: ${err.message}` }), { status: 502 });
+  }
+  if (!source) {
+    return new Response(JSON.stringify({ error: "Recipe not found" }), { status: 404 });
+  }
+
+  const store = getStore({ accessToken: locals.session.accessToken, repo: locals.session.repo });
+
   let existing;
   try {
     existing = await store.list();
@@ -33,26 +55,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return new Response(JSON.stringify({ error: `Failed to load recipes: ${err.message}` }), { status: 502 });
   }
 
-  const slug = dedupeSlug(slugify(body.title), existing.map((r) => r.slug));
+  const slug = dedupeSlug(slugify(source.title), existing.map((r) => r.slug));
   const now = new Date().toISOString();
-
-  const recipe: Recipe = {
-    slug,
-    title: body.title.trim(),
-    sourceUrl: normalizeText(body.sourceUrl),
-    image: normalizeText(body.image),
-    tags: normalizeTags(body.tags),
-    public: Boolean(body.public),
-    servings: normalizeText(body.servings),
-    prepTime: normalizeText(body.prepTime),
-    cookTime: normalizeText(body.cookTime),
-    ingredients: normalizeStringList(body.ingredients),
-    instructions: normalizeStringList(body.instructions),
-    nutrition: normalizeNutrition(body.nutrition),
-    notes: normalizeText(body.notes),
-    createdAt: now,
-    updatedAt: now,
-  };
+  const recipe: Recipe = { ...source, slug, public: false, createdAt: now, updatedAt: now };
 
   try {
     await store.create(recipe);

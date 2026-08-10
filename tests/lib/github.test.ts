@@ -125,6 +125,29 @@ describe("RecipeStore", () => {
     expect(await store.get("chili")).toEqual({ recipe: sampleRecipe, sha: "sha-1" });
   });
 
+  it("lists recipes without a ref when no branch is configured", async () => {
+    const getContent = vi.fn(async ({ path }: { path: string }) => {
+      if (path === "data/recipes") {
+        return { data: [{ type: "file", name: "chili.json", path: "data/recipes/chili.json" }] };
+      }
+      return { data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } };
+    });
+    const client = { repos: { getContent, createOrUpdateFileContents: vi.fn(), deleteFile: vi.fn() } };
+    const store = new RecipeStore(client as any, { owner: "rob", repo: "recipes" });
+    await store.list();
+    for (const call of getContent.mock.calls) {
+      expect(call[0]).not.toHaveProperty("ref");
+    }
+  });
+
+  it("gets a recipe without a ref when no branch is configured", async () => {
+    const getContent = vi.fn(async () => ({ data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } }));
+    const client = { repos: { getContent, createOrUpdateFileContents: vi.fn(), deleteFile: vi.fn() } };
+    const store = new RecipeStore(client as any, { owner: "rob", repo: "recipes" });
+    await store.get("chili");
+    expect(getContent.mock.calls[0][0]).not.toHaveProperty("ref");
+  });
+
   it("returns null when a recipe is not found", async () => {
     const client = {
       repos: {

@@ -4,6 +4,7 @@ export interface RepoRef {
   owner: string;
   name: string;
   branch: string;
+  private: boolean;
 }
 
 export interface Session {

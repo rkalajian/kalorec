@@ -3,7 +3,7 @@ import type { Session } from "./session";
 export type RouteDecision = { redirect: string } | { proceed: true };
 
 export function isPublicPath(pathname: string): boolean {
-  return pathname.startsWith("/api/auth/") || pathname === "/logged-out";
+  return pathname.startsWith("/api/auth/") || pathname === "/logged-out" || pathname.startsWith("/u/");
 }
 
 export function decideRoute(session: Session | null, pathname: string): RouteDecision {

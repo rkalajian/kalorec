@@ -162,6 +162,26 @@ describe("POST /api/recipes", () => {
       expect.objectContaining({ ingredients: ["1", "2 cups flour"], instructions: ["true"] })
     );
   });
+
+  it("defaults public to false when omitted", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ public: false }));
+  });
+
+  it("sets public to true when requested", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili", public: true }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ public: true }));
+  });
 });
 
 describe("PUT /api/recipes/[slug]", () => {
@@ -319,6 +339,28 @@ describe("PUT /api/recipes/[slug]", () => {
       expect.objectContaining({ servings: "4" }),
       "sha-1"
     );
+  });
+
+  it("updates the public flag when provided", async () => {
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: false }, sha: "sha-1" });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Chili", public: true }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(expect.objectContaining({ public: true }), "sha-1");
+  });
+
+  it("leaves the public flag untouched when omitted from the body", async () => {
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    mockStore.update.mockResolvedValue(undefined);
+    await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Chili" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(mockStore.update).toHaveBeenCalledWith(expect.objectContaining({ public: true }), "sha-1");
   });
 });
 
