@@ -1,0 +1,110 @@
+---
+import { Image } from "astro:assets";
+import Layout from "../../../../layouts/Layout.astro";
+import { getPublicRecipe } from "../../../../lib/publicStore";
+import { resolveCopyAction } from "../../../../lib/copyAction";
+
+const { owner, repo, slug } = Astro.params;
+if (!owner || !repo || !slug) {
+  return new Response("Recipe not found", { status: 404 });
+}
+
+let recipe;
+try {
+  recipe = await getPublicRecipe(owner, repo, slug);
+} catch (err: any) {
+  return new Response(`Failed to load recipe: ${err.message}`, { status: 502 });
+}
+
+if (!recipe) {
+  return new Response("Recipe not found", { status: 404 });
+}
+
+// Astro.locals.session is typed as always-present, but middleware leaves it
+// null on public paths like this one when no cookie is set.
+const copyAction = resolveCopyAction(Astro.locals.session);
+---
+<Layout title={recipe.title} session={Astro.locals.session}>
+  <article>
+    <h1 class="text-2xl font-semibold tracking-tight">{recipe.title}</h1>
+
+    {recipe.image && <Image src={recipe.image} inferSize alt={recipe.title} class="mt-4 max-w-full rounded-md" />}
+
+    <ul class="mt-3 flex list-none flex-wrap gap-1.5 p-0">
+      {recipe.tags.map((tag) => (
+        <li class="rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">{tag}</li>
+      ))}
+    </ul>
+
+    <dl class="mt-4 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+      {recipe.servings && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Servings</dt><dd>{recipe.servings}</dd></>)}
+      {recipe.prepTime && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Prep time</dt><dd>{recipe.prepTime}</dd></>)}
+      {recipe.cookTime && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Cook time</dt><dd>{recipe.cookTime}</dd></>)}
+    </dl>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold tracking-tight">Ingredients</h2>
+      <ul class="mt-2 list-disc pl-5">
+        {recipe.ingredients.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="mt-6">
+      <h2 class="text-lg font-semibold tracking-tight">Instructions</h2>
+      <ol class="mt-2 list-decimal pl-5">
+        {recipe.instructions.map((step) => <li>{step}</li>)}
+      </ol>
+    </section>
+
+    {recipe.nutrition && Object.values(recipe.nutrition).some(Boolean) && (
+      <section class="mt-6">
+        <h2 class="text-lg font-semibold tracking-tight">Nutrition (per serving)</h2>
+        <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+          {recipe.nutrition.calories && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Calories</dt><dd>{recipe.nutrition.calories}</dd></>)}
+          {recipe.nutrition.protein && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Protein</dt><dd>{recipe.nutrition.protein}</dd></>)}
+          {recipe.nutrition.fat && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Fat</dt><dd>{recipe.nutrition.fat}</dd></>)}
+          {recipe.nutrition.carbohydrates && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Carbohydrates</dt><dd>{recipe.nutrition.carbohydrates}</dd></>)}
+          {recipe.nutrition.fiber && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Fiber</dt><dd>{recipe.nutrition.fiber}</dd></>)}
+          {recipe.nutrition.sugar && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Sugar</dt><dd>{recipe.nutrition.sugar}</dd></>)}
+          {recipe.nutrition.sodium && (<><dt class="font-medium text-zinc-600 dark:text-zinc-400">Sodium</dt><dd>{recipe.nutrition.sodium}</dd></>)}
+        </dl>
+      </section>
+    )}
+
+    {recipe.notes && (
+      <section class="mt-6">
+        <h2 class="text-lg font-semibold tracking-tight">Notes</h2>
+        <p class="mt-2">{recipe.notes}</p>
+      </section>
+    )}
+
+    {recipe.sourceUrl && (
+      <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
+        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{recipe.sourceUrl}</a>
+      </p>
+    )}
+
+    <div class="mt-6">
+      {copyAction.type === "copy" ? (
+        <button
+          type="button"
+          class="copy-recipe-button inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800"
+          data-owner={copyAction.owner}
+          data-repo={copyAction.repo}
+          data-slug={recipe.slug}
+        >
+          Add to my recipes
+        </button>
+      ) : (
+        <a
+          href={copyAction.type === "login" ? "/api/auth/login" : "/settings"}
+          class="inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800"
+        >
+          {copyAction.type === "login" ? "Log in to add" : "Add a repo to save recipes"}
+        </a>
+      )}
+    </div>
+  </article>
+</Layout>
+
+<script src="../../../../scripts/copy-recipe.ts"></script>
