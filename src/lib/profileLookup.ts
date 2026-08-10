@@ -10,10 +10,12 @@ export function parseProfilePath(raw: string): string | null {
     value = value.replace(/^https?:\/\/[^/]+\/?/, "");
   }
 
+  value = value.split(/[?#]/)[0];
   value = value.replace(/^\/+|\/+$/g, "");
   const parts = value.split("/").filter(Boolean);
   if (parts.length < 2) return null;
 
   const [owner, repo] = parts;
+  if (owner === "." || owner === ".." || repo === "." || repo === "..") return null;
   return `/u/${owner}/${repo}`;
 }

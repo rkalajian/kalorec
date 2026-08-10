@@ -38,4 +38,25 @@ describe("parseProfilePath", () => {
   it("returns null when only an owner is given, no repo", () => {
     expect(parseProfilePath("rob")).toBeNull();
   });
+
+  it("strips a query string from the repo segment", () => {
+    expect(parseProfilePath("https://kalorec.netlify.app/u/rob/recipes?ref=x")).toBe("/u/rob/recipes");
+  });
+
+  it("strips a fragment from the repo segment", () => {
+    expect(parseProfilePath("rob/recipes#section")).toBe("/u/rob/recipes");
+  });
+
+  it("returns null for dot-segments instead of silently navigating home", () => {
+    expect(parseProfilePath("../..")).toBeNull();
+    expect(parseProfilePath("./.")).toBeNull();
+  });
+
+  it("returns null for a javascript: pseudo-protocol input", () => {
+    expect(parseProfilePath("javascript:alert(1)")).toBeNull();
+  });
+
+  it("normalizes a protocol-relative input into a same-origin path (never off-site)", () => {
+    expect(parseProfilePath("//evil.com/x")).toBe("/u/evil.com/x");
+  });
 });
