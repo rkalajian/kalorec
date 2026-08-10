@@ -32,10 +32,10 @@ export async function resolveRepoSelection(
   client: RepoClient,
   owner: string,
   name: string
-): Promise<{ owner: string; name: string; branch: string }> {
+): Promise<{ owner: string; name: string; branch: string; private: boolean }> {
   const res = await client.repos.get({ owner, repo: name });
   if (!res.data.permissions?.push) {
     throw new Error(`No push access to ${owner}/${name}`);
   }
-  return { owner, name, branch: res.data.default_branch };
+  return { owner, name, branch: res.data.default_branch, private: res.data.private };
 }

@@ -38,7 +38,7 @@ describe("POST /api/settings/repo", () => {
   });
 
   it("selects a repo the user has push access to and redirects home", async () => {
-    mockOctokitInstance.repos.get.mockResolvedValue({ data: { default_branch: "main", permissions: { push: true } } });
+    mockOctokitInstance.repos.get.mockResolvedValue({ data: { default_branch: "main", private: true, permissions: { push: true } } });
     const { POST } = await import("../../../../src/pages/api/settings/repo");
 
     const session: Session = { githubLogin: "rob", accessToken: "tok", repo: null };
@@ -59,7 +59,7 @@ describe("POST /api/settings/repo", () => {
     expect(decryptSession(value, "test-secret-value")).toEqual({
       githubLogin: "rob",
       accessToken: "tok",
-      repo: { owner: "rob", name: "recipes", branch: "main" },
+      repo: { owner: "rob", name: "recipes", branch: "main", private: true },
     });
   });
 
