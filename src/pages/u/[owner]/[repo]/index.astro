@@ -1,0 +1,55 @@
+---
+import Layout from "../../../../layouts/Layout.astro";
+import RecipeCard from "../../../../components/RecipeCard.astro";
+import { listPublicRecipes } from "../../../../lib/publicStore";
+import { resolveCopyAction } from "../../../../lib/copyAction";
+
+const { owner, repo } = Astro.params;
+
+let recipes;
+try {
+  recipes = await listPublicRecipes(owner!, repo!);
+} catch (err: any) {
+  return new Response(`Failed to load recipes: ${err.message}`, { status: 502 });
+}
+recipes.sort((a, b) => a.title.localeCompare(b.title));
+const allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
+// Astro.locals.session is typed as always-present, but middleware leaves it
+// null on public paths like this one when no cookie is set.
+const copyAction = resolveCopyAction(Astro.locals.session);
+---
+<Layout title={`${owner}'s recipes`} session={Astro.locals.session}>
+  <h1 class="text-2xl font-semibold tracking-tight">{owner}'s recipes</h1>
+
+  <div class="mt-4 flex flex-col gap-3">
+    <input
+      type="search"
+      id="search-input"
+      placeholder="Search recipes..."
+      class="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+    />
+    <div id="tag-filters" class="flex flex-wrap gap-1.5">
+      {allTags.map((tag) => (
+        <button
+          type="button"
+          aria-pressed="false"
+          class="tag-filter rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
+          data-tag={tag}
+        >{tag}</button>
+      ))}
+    </div>
+  </div>
+
+  {recipes.length === 0 ? (
+    <p class="mt-6 text-zinc-600 dark:text-zinc-400">No public recipes yet.</p>
+  ) : (
+    <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+      {recipes.map((recipe) => (
+        <RecipeCard recipe={recipe} href={`/u/${owner}/${repo}/${recipe.slug}`} copyAction={copyAction} />
+      ))}
+    </div>
+  )}
+</Layout>
+
+<script src="../../../../scripts/recipe-list.ts"></script>
+<script src="../../../../scripts/copy-recipe.ts"></script>
