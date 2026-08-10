@@ -12,13 +12,13 @@ describe("resolveCopyAction", () => {
     });
   });
 
-  it("returns copy with the owner/repo when a repo is configured", () => {
+  it("returns copy when a repo is configured", () => {
     expect(
       resolveCopyAction({
         githubLogin: "rob",
         accessToken: "tok",
         repo: { owner: "rob", name: "recipes", branch: "main", private: false },
       })
-    ).toEqual({ type: "copy", owner: "rob", repo: "recipes" });
+    ).toEqual({ type: "copy" });
   });
 });

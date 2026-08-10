@@ -45,7 +45,7 @@ const copyAction = resolveCopyAction(Astro.locals.session);
   ) : (
     <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
       {recipes.map((recipe) => (
-        <RecipeCard recipe={recipe} href={`/u/${owner}/${repo}/${recipe.slug}`} copyAction={copyAction} />
+        <RecipeCard recipe={recipe} href={`/u/${owner}/${repo}/${recipe.slug}`} copyAction={copyAction} sourceOwner={owner} sourceRepo={repo} />
       ))}
     </div>
   )}

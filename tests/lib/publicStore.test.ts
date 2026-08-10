@@ -61,6 +61,20 @@ describe("listPublicRecipes", () => {
     const recipes = await listPublicRecipes("rob", "recipes");
     expect(recipes).toEqual([publicRecipe]);
   });
+
+  it("caches results so a second call within the TTL doesn't hit the API again", async () => {
+    mockOctokitInstance.repos.getContent.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === "data/recipes") {
+        return { data: [{ type: "file", name: "chili.json", path: "data/recipes/chili.json" }] };
+      }
+      return { data: { type: "file", content: b64(publicRecipe), sha: "sha-1" } };
+    });
+    const first = await listPublicRecipes("cache-owner", "cache-repo");
+    const callsAfterFirst = mockOctokitInstance.repos.getContent.mock.calls.length;
+    const second = await listPublicRecipes("cache-owner", "cache-repo");
+    expect(second).toEqual(first);
+    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBe(callsAfterFirst);
+  });
 });
 
 describe("getPublicRecipe", () => {
@@ -87,5 +101,16 @@ describe("getPublicRecipe", () => {
       throw err;
     });
     expect(await getPublicRecipe("rob", "recipes", "missing")).toBeNull();
+  });
+
+  it("caches results so a second call within the TTL doesn't hit the API again", async () => {
+    mockOctokitInstance.repos.getContent.mockResolvedValue({
+      data: { type: "file", content: b64(publicRecipe), sha: "sha-1" },
+    });
+    const first = await getPublicRecipe("cache-owner", "cache-repo", "chili");
+    const callsAfterFirst = mockOctokitInstance.repos.getContent.mock.calls.length;
+    const second = await getPublicRecipe("cache-owner", "cache-repo", "chili");
+    expect(second).toEqual(first);
+    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBe(callsAfterFirst);
   });
 });

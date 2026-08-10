@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import Layout from "../../../../layouts/Layout.astro";
 import { getPublicRecipe } from "../../../../lib/publicStore";
 import { resolveCopyAction } from "../../../../lib/copyAction";
@@ -28,7 +27,7 @@ const copyAction = resolveCopyAction(Astro.locals.session);
   <article>
     <h1 class="text-2xl font-semibold tracking-tight">{recipe.title}</h1>
 
-    {recipe.image && <Image src={recipe.image} inferSize alt={recipe.title} class="mt-4 max-w-full rounded-md" />}
+    {recipe.image && <img src={recipe.image} alt={recipe.title} loading="lazy" class="mt-4 max-w-full rounded-md" />}
 
     <ul class="mt-3 flex list-none flex-wrap gap-1.5 p-0">
       {recipe.tags.map((tag) => (
@@ -89,8 +88,8 @@ const copyAction = resolveCopyAction(Astro.locals.session);
         <button
           type="button"
           class="copy-recipe-button inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800"
-          data-owner={copyAction.owner}
-          data-repo={copyAction.repo}
+          data-owner={owner}
+          data-repo={repo}
           data-slug={recipe.slug}
         >
           Add to my recipes
