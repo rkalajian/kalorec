@@ -31,7 +31,7 @@
     "Let the chicken rest for 5 minutes before cutting to keep it juicy."
   ],
   "nutrition": {
-    "calories": "34 kcal",
+    "calories": "343kcal",
     "protein": "37g",
     "fat": "18g",
     "carbohydrates": "6g",
@@ -40,5 +40,5 @@
     "sodium": "824mg"
   },
   "createdAt": "2026-08-31T19:31:01.594Z",
-  "updatedAt": "2026-08-31T19:31:01.594Z"
+  "updatedAt": "2026-08-31T21:06:13.465Z"
 }
