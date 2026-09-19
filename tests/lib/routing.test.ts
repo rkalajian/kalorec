@@ -6,7 +6,7 @@ const sessionNoRepo: Session = { githubLogin: "rob", accessToken: "tok", repo: n
 const sessionWithRepo: Session = {
   githubLogin: "rob",
   accessToken: "tok",
-  repo: { owner: "rob", name: "recipes", branch: "main" },
+  repo: { owner: "rob", name: "recipes", branch: "main", private: false },
 };
 
 describe("isPublicPath", () => {

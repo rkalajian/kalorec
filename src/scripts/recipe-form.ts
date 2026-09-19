@@ -32,19 +32,25 @@ const instructionsList = document.getElementById("instructions-list")!;
 
 const rowInputClass = "flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
 const removeButtonClass = "rounded-md border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800";
+let ingredientRowId = 0;
+let instructionRowId = 0;
 
 function addRow(container: HTMLElement, kind: "ingredient" | "instruction", value = "") {
   const row = document.createElement("div");
   row.className = "mt-2 flex gap-2";
+  const number = kind === "ingredient" ? ++ingredientRowId : ++instructionRowId;
+  const name = kind === "ingredient" ? "Ingredient" : "Step";
   const input = document.createElement("input");
   input.type = "text";
   input.value = value;
   input.className = `${kind}-input ${rowInputClass}`;
+  input.setAttribute("aria-label", `${name} ${number}`);
   input.placeholder = kind === "ingredient" ? "e.g. 2 cups flour" : "e.g. Preheat oven to 350°F";
   const removeBtn = document.createElement("button");
   removeBtn.type = "button";
   removeBtn.className = removeButtonClass;
   removeBtn.textContent = "Remove";
+  removeBtn.setAttribute("aria-label", `Remove ${name.toLowerCase()} ${number}`);
   removeBtn.addEventListener("click", () => row.remove());
   row.append(input, removeBtn);
   container.append(row);

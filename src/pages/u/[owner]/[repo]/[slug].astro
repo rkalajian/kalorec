@@ -2,6 +2,7 @@
 import Layout from "../../../../layouts/Layout.astro";
 import { getPublicRecipe } from "../../../../lib/publicStore";
 import { resolveCopyAction } from "../../../../lib/copyAction";
+import { safeRecipeUrl } from "../../../../lib/normalize";
 
 const { owner, repo, slug } = Astro.params;
 if (!owner || !repo || !slug) {
@@ -22,12 +23,14 @@ if (!recipe) {
 // Astro.locals.session is typed as always-present, but middleware leaves it
 // null on public paths like this one when no cookie is set.
 const copyAction = resolveCopyAction(Astro.locals.session);
+const imageUrl = safeRecipeUrl(recipe.image, "image");
+const sourceUrl = safeRecipeUrl(recipe.sourceUrl, "sourceUrl");
 ---
 <Layout title={recipe.title} session={Astro.locals.session}>
   <article>
     <h1 class="text-2xl font-semibold tracking-tight">{recipe.title}</h1>
 
-    {recipe.image && <img src={recipe.image} alt={recipe.title} loading="lazy" class="mt-4 max-w-full rounded-md" />}
+    {imageUrl && <img src={imageUrl} alt={recipe.title} loading="lazy" class="mt-4 max-w-full rounded-md" />}
 
     <ul class="mt-3 flex list-none flex-wrap gap-1.5 p-0">
       {recipe.tags.map((tag) => (
@@ -77,9 +80,9 @@ const copyAction = resolveCopyAction(Astro.locals.session);
       </section>
     )}
 
-    {recipe.sourceUrl && (
+    {sourceUrl && (
       <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{recipe.sourceUrl}</a>
+        Source: <a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{sourceUrl}</a>
       </p>
     )}
 

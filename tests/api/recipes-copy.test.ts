@@ -33,7 +33,7 @@ const sourceRecipe = {
 describe("POST /api/recipes/copy", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("copies a public recipe into the caller's repo as private with a fresh slug", async () => {
+  it("copies a shared recipe hidden from the caller's profile with a fresh slug", async () => {
     mockGetPublicRecipe.mockResolvedValue(sourceRecipe);
     mockStore.list.mockResolvedValue([{ slug: "chili" }]);
     mockStore.create.mockResolvedValue(undefined);
@@ -51,6 +51,25 @@ describe("POST /api/recipes/copy", () => {
     expect(mockStore.create).toHaveBeenCalledWith(
       expect.objectContaining({ slug: "chili-2", title: "Chili", public: false })
     );
+  });
+
+  it("drops unsafe URLs supplied by a GitHub JSON file", async () => {
+    mockGetPublicRecipe.mockResolvedValue({
+      ...sourceRecipe,
+      sourceUrl: "javascript:alert(1)",
+      image: "http://example.com/photo.jpg",
+    });
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    const response = await POST({
+      request: jsonRequest({ owner: "amy", repo: "cookbook", slug: "chili" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(201);
+    expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({
+      sourceUrl: undefined,
+      image: undefined,
+    }));
   });
 
   it("returns 404 when the source recipe is missing or not public", async () => {

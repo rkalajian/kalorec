@@ -1,8 +1,8 @@
 ---
-import { Image } from "astro:assets";
 import Layout from "../../layouts/Layout.astro";
 import { getStore } from "../../lib/store";
 import { SESSION_COOKIE } from "../../lib/session";
+import { safeRecipeUrl } from "../../lib/normalize";
 
 const { slug } = Astro.params;
 const store = getStore({ accessToken: Astro.locals.session.accessToken, repo: Astro.locals.session.repo! });
@@ -25,6 +25,8 @@ if (!stored) {
   return new Response("Recipe not found", { status: 404 });
 }
 const recipe = stored.recipe;
+const imageUrl = safeRecipeUrl(recipe.image, "image");
+const sourceUrl = safeRecipeUrl(recipe.sourceUrl, "sourceUrl");
 ---
 <Layout title={recipe.title}>
   <article>
@@ -35,7 +37,7 @@ const recipe = stored.recipe;
       </div>
     </div>
 
-    {recipe.image && <Image src={recipe.image} inferSize alt={recipe.title} class="mt-4 max-w-full rounded-md" />}
+    {imageUrl && <img src={imageUrl} alt={recipe.title} loading="lazy" class="mt-4 max-w-full rounded-md" />}
 
     <ul class="mt-3 flex list-none flex-wrap gap-1.5 p-0">
       {recipe.tags.map((tag) => (
@@ -85,9 +87,9 @@ const recipe = stored.recipe;
       </section>
     )}
 
-    {recipe.sourceUrl && (
+    {sourceUrl && (
       <p class="mt-6 text-sm text-zinc-600 dark:text-zinc-400">
-        Source: <a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{recipe.sourceUrl}</a>
+        Source: <a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="text-green-700 dark:text-green-400">{sourceUrl}</a>
       </p>
     )}
   </article>

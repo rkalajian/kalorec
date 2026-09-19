@@ -22,6 +22,7 @@ const copyAction = resolveCopyAction(Astro.locals.session);
   <h1 class="text-2xl font-semibold tracking-tight">{owner}'s recipes</h1>
 
   <div class="mt-4 flex flex-col gap-3">
+    <label for="search-input" class="text-sm font-medium">Search recipes</label>
     <input
       type="search"
       id="search-input"
@@ -33,7 +34,7 @@ const copyAction = resolveCopyAction(Astro.locals.session);
         <button
           type="button"
           aria-pressed="false"
-          class="tag-filter rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
+          class="tag-filter min-h-6 min-w-6 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
           data-tag={tag}
         >{tag}</button>
       ))}

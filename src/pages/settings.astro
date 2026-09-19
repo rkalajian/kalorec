@@ -24,6 +24,9 @@ const error = Astro.url.searchParams.get("error");
   <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
     Pick which of your GitHub repos recipes should be stored in.
   </p>
+  <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
+    A public GitHub repo exposes every saved recipe JSON file on GitHub, including recipes hidden from your Kalorec profile.
+  </p>
 
   {error === "no_access" && (
     <p class="mt-4 text-red-600 dark:text-red-400">
@@ -39,6 +42,7 @@ const error = Astro.url.searchParams.get("error");
           <span>
             {repo.owner}/{repo.name}
             {repo.private && <span class="ml-2 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">private</span>}
+            {!repo.private && <span class="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">public</span>}
             {isCurrent && <span class="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">selected</span>}
           </span>
           <form method="POST" action="/api/settings/repo">
@@ -60,9 +64,10 @@ const error = Astro.url.searchParams.get("error");
     <section class="mt-8 rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
       <h2 class="text-lg font-semibold tracking-tight">Share your profile</h2>
       <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Anyone with this link can view recipes you've marked public.
+        Recipes you choose to share appear at this link. This setting only controls your Kalorec profile.
       </p>
-      <div class="mt-3 flex gap-2">
+      <label for="share-link" class="mt-3 block text-sm font-medium">Profile link</label>
+      <div class="mt-1 flex gap-2">
         <input
           type="text"
           id="share-link"
@@ -79,6 +84,11 @@ const error = Astro.url.searchParams.get("error");
       {session.repo.private && (
         <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
           This repo is private on GitHub — the link above won't work until you make it public.
+        </p>
+      )}
+      {!session.repo.private && (
+        <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
+          This repo is public on GitHub. Every saved recipe JSON file is public there, whether or not you share it on this profile.
         </p>
       )}
     </section>

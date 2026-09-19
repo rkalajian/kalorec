@@ -83,6 +83,21 @@ describe("POST /api/recipes", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects unsafe URLs and oversized titles before reading GitHub", async () => {
+    for (const body of [
+      { title: "Chili", sourceUrl: "javascript:alert(1)" },
+      { title: "Chili", image: "http://example.com/image.jpg" },
+      { title: "x".repeat(201) },
+    ]) {
+      const response = await POST({
+        request: jsonRequest("http://localhost/api/recipes", "POST", body),
+        locals: { session: fakeSession },
+      } as any);
+      expect(response.status).toBe(400);
+    }
+    expect(mockStore.list).not.toHaveBeenCalled();
+  });
+
   it("returns 502 when the GitHub write fails", async () => {
     mockStore.list.mockResolvedValue([]);
     mockStore.create.mockRejectedValue(new Error("rate limited"));
@@ -251,6 +266,35 @@ describe("PUT /api/recipes/[slug]", () => {
     } as any);
     expect(response.status).toBe(400);
     expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects unsafe URL updates", async () => {
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { sourceUrl: "javascript:alert(1)" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(400);
+    expect(mockStore.get).not.toHaveBeenCalled();
+    expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("drops unsafe URLs from an existing recipe when saving other changes", async () => {
+    mockStore.get.mockResolvedValue({
+      recipe: { ...existingRecipe, sourceUrl: "javascript:alert(1)", image: "http://example.com/photo.jpg" },
+      sha: "sha-1",
+    });
+    mockStore.update.mockResolvedValue(undefined);
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "Updated chili" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(200);
+    expect(mockStore.update).toHaveBeenCalledWith(
+      expect.objectContaining({ sourceUrl: undefined, image: undefined }),
+      "sha-1"
+    );
   });
 
   it("returns 400 on malformed JSON body", async () => {

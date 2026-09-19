@@ -11,7 +11,7 @@ const secret = "test-secret-value";
 const session: Session = {
   githubLogin: "rob",
   accessToken: "gho_abc123",
-  repo: { owner: "rob", name: "recipes", branch: "main" },
+  repo: { owner: "rob", name: "recipes", branch: "main", private: false },
 };
 
 describe("encryptSession / decryptSession", () => {

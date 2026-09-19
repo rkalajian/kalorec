@@ -40,6 +40,14 @@ describe("POST /api/import", () => {
     expect(response.status).toBe(400);
   });
 
+  it("rejects null and oversized URLs before extraction", async () => {
+    for (const body of [null, { url: `https://example.com/${"x".repeat(2050)}` }]) {
+      const response = await POST({ request: jsonRequest(body) } as any);
+      expect(response.status).toBe(400);
+    }
+    expect(mockExtract).not.toHaveBeenCalled();
+  });
+
   it("returns 422 with the error message when extraction fails", async () => {
     mockExtract.mockRejectedValue(new Error("responded with status 404"));
     const response = await POST({ request: jsonRequest({ url: "https://example.com/missing" }) } as any);

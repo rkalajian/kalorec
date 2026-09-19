@@ -1,6 +1,7 @@
 ---
 import type { Recipe } from "../lib/recipe";
 import type { CopyAction } from "../lib/copyAction";
+import { safeRecipeUrl } from "../lib/normalize";
 
 interface Props {
   recipe: Recipe;
@@ -10,6 +11,7 @@ interface Props {
   sourceRepo?: string;
 }
 const { recipe, href = `/recipes/${recipe.slug}`, copyAction, sourceOwner, sourceRepo } = Astro.props;
+const imageUrl = safeRecipeUrl(recipe.image, "image");
 ---
 <div
   class="recipe-card rounded-md border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800"
@@ -17,7 +19,7 @@ const { recipe, href = `/recipes/${recipe.slug}`, copyAction, sourceOwner, sourc
   data-title={recipe.title.toLowerCase()}
 >
   <a href={href} class="block p-4 text-inherit no-underline">
-    {recipe.image && <img src={recipe.image} alt="" loading="lazy" class="mb-3 h-36 w-full rounded-md object-cover" />}
+    {imageUrl && <img src={imageUrl} alt="" loading="lazy" class="mb-3 h-36 w-full rounded-md object-cover" />}
     <h3 class="font-semibold text-zinc-900 dark:text-zinc-100">{recipe.title}</h3>
     <ul class="mt-2 flex list-none flex-wrap gap-1.5 p-0">
       {recipe.tags.map((tag) => (
