@@ -13,11 +13,26 @@ vi.mock("../../src/lib/store", () => ({
   getStore: vi.fn(() => mockStore),
 }));
 
+const mockPublishRecipe = vi.fn(async (..._args: unknown[]) => {});
+const mockUnpublishRecipe = vi.fn(async (..._args: unknown[]) => {});
+const mockSharingStore = {};
+vi.mock("../../src/lib/publishing", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../src/lib/publishing")>()),
+  getSharingStore: vi.fn(() => mockSharingStore),
+  publishRecipe: (...args: unknown[]) => mockPublishRecipe(...args),
+  unpublishRecipe: (...args: unknown[]) => mockUnpublishRecipe(...args),
+  verifySharingRepos: vi.fn(async () => {}),
+}));
+
 import { getStore } from "../../src/lib/store";
 import { POST } from "../../src/pages/api/recipes/index";
 import { PUT, DELETE } from "../../src/pages/api/recipes/[slug]";
 
-const fakeSession = { accessToken: "tok", repo: { owner: "rob", name: "recipes", branch: "main" } };
+const fakeSession = {
+  accessToken: "tok",
+  repo: { owner: "rob", name: "recipes", branch: "main", private: true },
+  sharingRepo: { owner: "rob", name: "shared-recipes", branch: "main", private: false },
+};
 
 function jsonRequest(url: string, method: string, body?: unknown) {
   return new Request(url, {
@@ -196,6 +211,38 @@ describe("POST /api/recipes", () => {
       locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ public: true }));
+    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }));
+  });
+
+  it("rejects sharing without a configured public repo before writing the source", async () => {
+    const response = await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili", public: true }),
+      locals: { session: { ...fakeSession, sharingRepo: null } },
+    } as any);
+    expect(response.status).toBe(409);
+    expect(mockStore.create).not.toHaveBeenCalled();
+  });
+
+  it("reports a saved private source when publication fails", async () => {
+    mockStore.list.mockResolvedValue([]);
+    mockStore.create.mockResolvedValue(undefined);
+    mockPublishRecipe.mockRejectedValueOnce(new Error("GitHub unavailable"));
+    const response = await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili", public: true }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(207);
+    expect(await response.json()).toEqual(expect.objectContaining({ slug: "chili", warning: expect.any(String) }));
+    expect(mockStore.create).toHaveBeenCalled();
+  });
+
+  it("rejects string sharing flags", async () => {
+    const response = await POST({
+      request: jsonRequest("http://localhost/api/recipes", "POST", { title: "Chili", public: "false" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(400);
+    expect(mockStore.create).not.toHaveBeenCalled();
   });
 });
 
@@ -394,6 +441,58 @@ describe("PUT /api/recipes/[slug]", () => {
       locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(expect.objectContaining({ public: true }), "sha-1");
+    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }));
+  });
+
+  it("removes a public copy before saving an unshared source", async () => {
+    const order: string[] = [];
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    mockUnpublishRecipe.mockImplementationOnce(async () => { order.push("unpublish"); });
+    mockStore.update.mockImplementationOnce(async () => { order.push("source update"); });
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { public: false }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(200);
+    expect(order).toEqual(["unpublish", "source update"]);
+    expect(mockStore.update).toHaveBeenCalledWith(expect.objectContaining({ public: false }), "sha-1");
+  });
+
+  it("keeps the source shared when removing the public copy fails", async () => {
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    mockUnpublishRecipe.mockRejectedValueOnce(new Error("GitHub unavailable"));
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { public: false }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(502);
+    expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("requires the original sharing repo before unsharing", async () => {
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { public: false }),
+      locals: { session: { ...fakeSession, sharingRepo: null } },
+    } as any);
+    expect(response.status).toBe(409);
+    expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("reports partial success when updating a public copy fails", async () => {
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    mockStore.update.mockResolvedValue(undefined);
+    mockPublishRecipe.mockRejectedValueOnce(new Error("GitHub unavailable"));
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", { title: "New chili" }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(207);
+    expect(mockStore.update).toHaveBeenCalled();
   });
 
   it("leaves the public flag untouched when omitted from the body", async () => {
@@ -418,6 +517,16 @@ describe("DELETE /api/recipes/[slug]", () => {
     expect(response.status).toBe(204);
     expect(mockStore.remove).toHaveBeenCalledWith("chili", "sha-1", "Chili");
     expect(getStore).toHaveBeenCalledWith({ accessToken: fakeSession.accessToken, repo: fakeSession.repo });
+  });
+
+  it("removes the public copy before deleting a shared source", async () => {
+    const order: string[] = [];
+    mockStore.get.mockResolvedValue({ recipe: { ...existingRecipe, public: true }, sha: "sha-1" });
+    mockUnpublishRecipe.mockImplementationOnce(async () => { order.push("unpublish"); });
+    mockStore.remove.mockImplementationOnce(async () => { order.push("source delete"); });
+    const response = await DELETE({ params: { slug: "chili" }, locals: { session: fakeSession } } as any);
+    expect(response.status).toBe(204);
+    expect(order).toEqual(["unpublish", "source delete"]);
   });
 
   it("returns 404 when the recipe does not exist", async () => {

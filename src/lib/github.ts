@@ -1,6 +1,7 @@
 import type { Recipe } from "./recipe";
 
 const RECIPES_DIR = "data/recipes";
+export const SHARED_RECIPES_DIR = "data/shared-recipes";
 const CONTENTS_DIRECTORY_LIMIT = 1000;
 const LIST_CONCURRENCY = 8;
 
@@ -31,6 +32,7 @@ export interface GithubStoreConfig {
   owner: string;
   repo: string;
   branch?: string;
+  directory?: string;
 }
 
 export interface StoredRecipe {
@@ -41,8 +43,15 @@ export interface StoredRecipe {
 export class RecipeStore {
   constructor(private client: GithubClient, private config: GithubStoreConfig) {}
 
+  private get directory(): string {
+    return this.config.directory ?? RECIPES_DIR;
+  }
+
   private path(slug: string): string {
-    return `${RECIPES_DIR}/${slug}.json`;
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      throw new Error("Invalid recipe slug");
+    }
+    return `${this.directory}/${slug}.json`;
   }
 
   async list(): Promise<Recipe[]> {
@@ -52,7 +61,7 @@ export class RecipeStore {
       const res = await this.client.repos.getContent({
         owner,
         repo,
-        path: RECIPES_DIR,
+        path: this.directory,
         ...(branch ? { ref: branch } : {}),
       });
       if (!Array.isArray(res.data)) {
@@ -65,7 +74,7 @@ export class RecipeStore {
     }
     if (entries.length >= CONTENTS_DIRECTORY_LIMIT) {
       throw new Error(
-        "Recipe directory listing reached GitHub Contents API's 1,000-entry limit; reduce files in data/recipes"
+        `Recipe directory listing reached GitHub Contents API's 1,000-entry limit; reduce files in ${this.directory}`
       );
     }
 

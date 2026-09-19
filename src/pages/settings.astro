@@ -22,10 +22,7 @@ const error = Astro.url.searchParams.get("error");
 <Layout title="Settings">
   <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
   <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-    Pick which of your GitHub repos recipes should be stored in.
-  </p>
-  <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
-    A public GitHub repo exposes every saved recipe JSON file on GitHub, including recipes hidden from your Kalorec profile.
+    Store recipes in a private GitHub repo, then copy only recipes you choose to share into a separate public repo.
   </p>
 
   {error === "no_access" && (
@@ -34,8 +31,23 @@ const error = Astro.url.searchParams.get("error");
     </p>
   )}
 
+  {error === "source_must_be_private" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a private repo for recipe storage.</p>}
+  {error === "sharing_must_be_public" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a public repo for shared recipes.</p>}
+  {error === "sharing_must_differ" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a different repo for shared recipes.</p>}
+  {error === "source_has_shared_recipes" && <p class="mt-4 text-red-600 dark:text-red-400">Unshare recipes before changing your source repo.</p>}
+  {error === "sharing_repo_has_published_recipes" && <p class="mt-4 text-red-600 dark:text-red-400">Remove published copies before changing either repo.</p>}
+  {error === "sharing_repo_not_empty" && <p class="mt-4 text-red-600 dark:text-red-400">Choose an empty public sharing repo so existing files are not overwritten.</p>}
+  {error === "repo_change_check_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not verify published recipes. Try again.</p>}
+  {error === "migration_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not copy all shared recipes. Your sharing repo is selected; use Sync below to retry.</p>}
+  {error === "sharing_config_load_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not load this repo's sharing configuration. Try again.</p>}
+  {error === "sharing_config_invalid" && <p class="mt-4 text-red-600 dark:text-red-400">This repo's saved sharing destination is no longer a separate public repo you can write to.</p>}
+  {error === "sharing_config_save_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not save the sharing configuration. Try again.</p>}
+
+  <section class="mt-6">
+    <h2 class="text-lg font-semibold tracking-tight">Private recipe repo</h2>
+    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Your complete recipe collection stays here.</p>
   <ul class="mt-4 flex flex-col gap-2">
-    {repos.map((repo) => {
+    {repos.filter((repo) => repo.private).map((repo) => {
       const isCurrent = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
       return (
         <li class="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
@@ -50,16 +62,47 @@ const error = Astro.url.searchParams.get("error");
             <input type="hidden" name="name" value={repo.name} />
             <button
               type="submit"
-              class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800"
-              disabled={isCurrent}
+              class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:bg-green-700 dark:hover:bg-green-800"
             >
-              {isCurrent ? "Selected" : "Select"}
+              {isCurrent ? "Reload" : "Select"}
             </button>
           </form>
         </li>
       );
     })}
   </ul>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="text-lg font-semibold tracking-tight">Public sharing repo</h2>
+    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Only recipes you explicitly share are copied here. GitHub history can retain copies after you unshare them.</p>
+    <ul class="mt-4 flex flex-col gap-2">
+      {repos.filter((repo) => !repo.private).map((repo) => {
+        const isCurrent = session.sharingRepo?.owner === repo.owner && session.sharingRepo?.name === repo.name;
+        const isSource = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
+        return (
+          <li class="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
+            <span>
+              {repo.owner}/{repo.name}
+              <span class="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">public</span>
+              {isCurrent && <span class="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">selected</span>}
+            </span>
+            <form method="POST" action="/api/settings/sharing-repo">
+              <input type="hidden" name="owner" value={repo.owner} />
+              <input type="hidden" name="name" value={repo.name} />
+              <button
+                type="submit"
+                class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-green-700 dark:hover:bg-green-800"
+                disabled={isSource}
+              >
+                {isCurrent ? "Sync" : isSource ? "Source repo" : "Select"}
+              </button>
+            </form>
+          </li>
+        );
+      })}
+    </ul>
+  </section>
   {session.repo && (
     <section class="mt-8 rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
       <h2 class="text-lg font-semibold tracking-tight">Share your profile</h2>
@@ -72,23 +115,24 @@ const error = Astro.url.searchParams.get("error");
           type="text"
           id="share-link"
           readonly
-          value={`${Astro.url.origin}/u/${session.repo.owner}/${session.repo.name}`}
+          value={session.sharingRepo ? `${Astro.url.origin}/u/${session.sharingRepo.owner}/${session.sharingRepo.name}` : "Choose a public sharing repo first"}
           class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
         />
         <button
           type="button"
           id="copy-share-link"
-          class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          disabled={!session.sharingRepo}
         >Copy</button>
       </div>
-      {session.repo.private && (
+      {!session.sharingRepo && (
         <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
-          This repo is private on GitHub — the link above won't work until you make it public.
+          Choose a public sharing repo before sharing your profile.
         </p>
       )}
-      {!session.repo.private && (
+      {session.sharingRepo && (
         <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
-          This repo is public on GitHub. Every saved recipe JSON file is public there, whether or not you share it on this profile.
+          Shared recipe copies are public on GitHub and may remain in Git history after unsharing.
         </p>
       )}
     </section>

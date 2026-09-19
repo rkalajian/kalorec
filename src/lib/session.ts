@@ -11,6 +11,7 @@ export interface Session {
   githubLogin: string;
   accessToken: string;
   repo: RepoRef | null;
+  sharingRepo?: RepoRef | null;
 }
 
 export const SESSION_COOKIE = "session";
@@ -53,6 +54,7 @@ export function decryptSession(token: string, secret: string): Session | null {
     const parsed = JSON.parse(plaintext.toString("utf-8"));
     if (typeof parsed.githubLogin !== "string" || typeof parsed.accessToken !== "string") return null;
     if (parsed.repo !== null && typeof parsed.repo !== "object") return null;
+    if (parsed.sharingRepo !== undefined && parsed.sharingRepo !== null && typeof parsed.sharingRepo !== "object") return null;
     return parsed as Session;
   } catch {
     return null;

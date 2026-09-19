@@ -62,6 +62,28 @@ describe("RecipeStore", () => {
     await expect(store.list()).rejects.toThrow(SyntaxError);
   });
 
+  it("uses the configured sharing directory for reads and writes", async () => {
+    const getContent = vi.fn(async ({ path }: { path: string }) => {
+      if (path === "data/shared-recipes") return { data: [{ type: "file", name: "chili.json" }] };
+      return { data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } };
+    });
+    const createOrUpdateFileContents = vi.fn(async () => ({}));
+    const client = { repos: { getContent, createOrUpdateFileContents, deleteFile: vi.fn() } };
+    const store = new RecipeStore(client as any, { ...config, directory: "data/shared-recipes" });
+    expect(await store.list()).toEqual([sampleRecipe]);
+    await store.create(sampleRecipe);
+    expect(getContent).toHaveBeenCalledWith(expect.objectContaining({ path: "data/shared-recipes/chili.json" }));
+    expect(createOrUpdateFileContents).toHaveBeenCalledWith(expect.objectContaining({ path: "data/shared-recipes/chili.json" }));
+  });
+
+  it("rejects unsafe slugs before requesting GitHub", async () => {
+    const getContent = vi.fn();
+    const client = { repos: { getContent, createOrUpdateFileContents: vi.fn(), deleteFile: vi.fn() } };
+    const store = new RecipeStore(client as any, config);
+    await expect(store.get("../secret")).rejects.toThrow("Invalid recipe slug");
+    expect(getContent).not.toHaveBeenCalled();
+  });
+
   it("fails when a recipe file cannot be read", async () => {
     const client = {
       repos: {

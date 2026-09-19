@@ -3,6 +3,7 @@ import { getStore } from "../../../lib/store";
 import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
 import { normalizeText, normalizeRecipeUrl, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 import { SESSION_COOKIE } from "../../../lib/session";
+import { getSharingStore, publishRecipe, sharingSetupError, SharingConfigurationError, verifySharingRepos } from "../../../lib/publishing";
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
   let body: any;
@@ -14,6 +15,20 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   if (!body || typeof body !== "object" || Array.isArray(body) ||
       typeof body.title !== "string" || !body.title.trim() || body.title.trim().length > 200) {
     return new Response(JSON.stringify({ error: "Title must be between 1 and 200 characters" }), { status: 400 });
+  }
+  if (body.public !== undefined && typeof body.public !== "boolean") {
+    return new Response(JSON.stringify({ error: "Sharing must be true or false" }), { status: 400 });
+  }
+  if (body.public === true) {
+    const error = sharingSetupError(locals.session);
+    if (error) return new Response(JSON.stringify({ error }), { status: 409 });
+    try {
+      await verifySharingRepos(locals.session);
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err instanceof SharingConfigurationError
+        ? err.message : "Could not verify sharing repos. Try again." }),
+      { status: err instanceof SharingConfigurationError ? 409 : 502 });
+    }
   }
 
   let sourceUrl: string | undefined;
@@ -52,7 +67,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     sourceUrl,
     image,
     tags: normalizeTags(body.tags),
-    public: Boolean(body.public),
+    public: body.public === true,
     servings: normalizeText(body.servings),
     prepTime: normalizeText(body.prepTime),
     cookTime: normalizeText(body.cookTime),
@@ -78,6 +93,17 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
       );
     }
     return new Response(JSON.stringify({ error: `Failed to save recipe: ${err.message}` }), { status: 502 });
+  }
+
+  if (recipe.public) {
+    try {
+      await publishRecipe(getSharingStore(locals.session), recipe);
+    } catch {
+      return new Response(JSON.stringify({
+        slug,
+        warning: "Recipe saved, but sharing failed. Open it and save again to retry publishing.",
+      }), { status: 207 });
+    }
   }
 
   return new Response(JSON.stringify({ slug }), { status: 201 });
