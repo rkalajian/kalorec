@@ -7,7 +7,8 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 - Log in with GitHub, then pick a repo in Settings — recipes for your account live at `data/recipes/<slug>.json` in that repo, on its default branch.
 - Server-side routes read/write that repo via the GitHub API, using your own OAuth access token — no database, and no shared credentials between users.
 - Pasting a link parses the page's `schema.org/Recipe` structured data when present, falling back to a best-effort heuristic extraction otherwise.
-- Mark a recipe public to expose it, read-only, at `/u/<owner>/<repo>` (and `/u/<owner>/<repo>/<slug>` for the recipe itself) — no login required to view. This only works if the chosen repo is public on GitHub; public pages read it unauthenticated. Any logged-in visitor can copy a shared recipe into their own repo from there.
+- Use the recipe sharing setting to include a recipe, read-only, at `/u/<owner>/<repo>` (and `/u/<owner>/<repo>/<slug>` for the recipe itself). It only controls the Kalorec shared profile. Sharing requires a public GitHub repo because public pages read it unauthenticated.
+- A public GitHub repo makes every `data/recipes/<slug>.json` file public on GitHub, regardless of its Kalorec sharing setting. Use a private repo to keep recipe files private.
 - Anonymous visitors land on a public homepage at `/` — a pitch for the app, a "Log in with GitHub" button, and a "View a shared profile" box that jumps straight to a `/u/<owner>/<repo>` link (paste a share link or type `owner/repo`). `/about` and `/how-to-use` are always reachable from the header nav, logged in or out.
 
 ## Setup
@@ -45,6 +46,6 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 - Click your GitHub login in the header → back on `/settings`; pick a different repo → confirm you're redirected home and now see that repo's (empty) recipe list.
 - Log out → session cookie cleared, redirected to `/logged-out` (a session-independent page with its own "Log in with GitHub" link — not straight back into `/api/auth/login`, which would silently re-authenticate via GitHub's already-authorized OAuth flow).
 - Simulate a revoked/expired token (e.g. revoke the OAuth App's access from your GitHub account settings) and try loading `/` → confirm a GitHub 401 bounces you back to login instead of crashing the page.
-- Mark a recipe public, make sure the chosen repo is public on GitHub, then visit `/u/<owner>/<repo>` in a logged-out/incognito window → confirm it lists only public recipes, search/tag filters work, and the recipe detail page loads at `/u/<owner>/<repo>/<slug>`.
-- Un-check public on that recipe → confirm both public pages now 404 it.
-- While logged in as a different account with a repo configured, click "Add to my recipes" on someone else's public recipe → confirm it copies into your own repo (as private) and redirects to `/recipes/<slug>`, not the other account's repo.
+- Share a recipe on your Kalorec profile, make sure the chosen repo is public on GitHub, then visit `/u/<owner>/<repo>` in a logged-out/incognito window → confirm it lists only shared recipes, search/tag filters work, and the recipe detail page loads at `/u/<owner>/<repo>/<slug>`.
+- Un-check profile sharing on that recipe → confirm both Kalorec public pages now 404 it; the JSON remains accessible on GitHub while the repo is public.
+- While logged in as a different account with a repo configured, click "Add to my recipes" on someone else's shared recipe → confirm it copies into your own repo (hidden from your Kalorec profile) and redirects to `/recipes/<slug>`, not the other account's repo.

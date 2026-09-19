@@ -37,8 +37,7 @@ describe("RecipeStore", () => {
     expect(recipes).toEqual([sampleRecipe]);
   });
 
-  it("skips a file that fails to parse and still returns the other valid recipes", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  it("fails when a recipe file cannot be parsed", async () => {
     const client = {
       repos: {
         getContent: vi.fn(async ({ path }: { path: string }) => {
@@ -60,14 +59,10 @@ describe("RecipeStore", () => {
       },
     };
     const store = new RecipeStore(client as any, config);
-    const recipes = await store.list();
-    expect(recipes).toEqual([sampleRecipe]);
-    expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
+    await expect(store.list()).rejects.toThrow(SyntaxError);
   });
 
-  it("skips a file that 500s while still returning the other valid recipes", async () => {
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+  it("fails when a recipe file cannot be read", async () => {
     const client = {
       repos: {
         getContent: vi.fn(async ({ path }: { path: string }) => {
@@ -91,10 +86,83 @@ describe("RecipeStore", () => {
       },
     };
     const store = new RecipeStore(client as any, config);
-    const recipes = await store.list();
-    expect(recipes).toEqual([sampleRecipe]);
-    expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
+    await expect(store.list()).rejects.toThrow("Internal Server Error");
+  });
+
+  it("fails when a listed recipe file disappears", async () => {
+    const client = {
+      repos: {
+        getContent: vi.fn(async ({ path }: { path: string }) => {
+          if (path === "data/recipes") {
+            return { data: [{ type: "file", name: "chili.json", path: "data/recipes/chili.json" }] };
+          }
+          const err: any = new Error("Not Found");
+          err.status = 404;
+          throw err;
+        }),
+        createOrUpdateFileContents: vi.fn(),
+        deleteFile: vi.fn(),
+      },
+    };
+    const store = new RecipeStore(client as any, config);
+    await expect(store.list()).rejects.toThrow("Recipe file disappeared while listing: chili.json");
+  });
+
+  it("limits concurrent recipe reads", async () => {
+    let active = 0;
+    let maximum = 0;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const entries = Array.from({ length: 9 }, (_, index) => ({
+      type: "file",
+      name: `recipe-${index}.json`,
+      path: `data/recipes/recipe-${index}.json`,
+    }));
+    const client = {
+      repos: {
+        getContent: vi.fn(async ({ path }: { path: string }) => {
+          if (path === "data/recipes") return { data: entries };
+          active += 1;
+          maximum = Math.max(maximum, active);
+          await gate;
+          active -= 1;
+          return { data: { type: "file", content: b64(sampleRecipe), sha: path } };
+        }),
+        createOrUpdateFileContents: vi.fn(),
+        deleteFile: vi.fn(),
+      },
+    };
+    const store = new RecipeStore(client as any, config);
+    const listing = store.list();
+    await vi.waitFor(() => expect(maximum).toBe(8));
+    release();
+    await expect(listing).resolves.toHaveLength(9);
+    expect(maximum).toBe(8);
+  });
+
+  it("fails explicitly when the directory reaches the Contents API limit", async () => {
+    const entries = Array.from({ length: 1000 }, (_, index) => ({
+      type: "file",
+      name: `recipe-${index}.json`,
+      path: `data/recipes/recipe-${index}.json`,
+    }));
+    const getContent = vi.fn(async () => ({ data: entries }));
+    const client = { repos: { getContent, createOrUpdateFileContents: vi.fn(), deleteFile: vi.fn() } };
+    const store = new RecipeStore(client as any, config);
+    await expect(store.list()).rejects.toThrow("1,000-entry limit");
+    expect(getContent).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails when GitHub returns a non-directory response for the recipe directory", async () => {
+    const client = {
+      repos: {
+        getContent: vi.fn(async () => ({ data: { type: "file" } })),
+        createOrUpdateFileContents: vi.fn(),
+        deleteFile: vi.fn(),
+      },
+    };
+    const store = new RecipeStore(client as any, config);
+    await expect(store.list()).rejects.toThrow("invalid recipe directory listing");
   });
 
   it("returns an empty list when the directory does not exist", async () => {
@@ -141,7 +209,7 @@ describe("RecipeStore", () => {
   });
 
   it("gets a recipe without a ref when no branch is configured", async () => {
-    const getContent = vi.fn(async () => ({ data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } }));
+    const getContent = vi.fn(async (_params: unknown) => ({ data: { type: "file", content: b64(sampleRecipe), sha: "sha-1" } }));
     const client = { repos: { getContent, createOrUpdateFileContents: vi.fn(), deleteFile: vi.fn() } };
     const store = new RecipeStore(client as any, { owner: "rob", repo: "recipes" });
     await store.get("chili");

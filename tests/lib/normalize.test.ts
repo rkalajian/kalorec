@@ -1,5 +1,24 @@
 import { describe, it, expect } from "vitest";
-import { normalizeText, normalizeNutrition, normalizeTags, normalizeStringList } from "../../src/lib/normalize";
+import { normalizeText, normalizeRecipeUrl, safeRecipeUrl, normalizeNutrition, normalizeTags, normalizeStringList } from "../../src/lib/normalize";
+
+describe("recipe URLs", () => {
+  it("accepts web source URLs and HTTPS image URLs", () => {
+    expect(normalizeRecipeUrl(" https://example.com/recipe ", "sourceUrl")).toBe("https://example.com/recipe");
+    expect(normalizeRecipeUrl("http://example.com/recipe", "sourceUrl")).toBe("http://example.com/recipe");
+    expect(normalizeRecipeUrl("https://example.com/photo.jpg", "image")).toBe("https://example.com/photo.jpg");
+    expect(normalizeRecipeUrl("  ", "image")).toBeUndefined();
+  });
+
+  it("rejects unsafe, malformed, credentialed, and oversized URLs", () => {
+    for (const value of ["javascript:alert(1)", "data:text/html,x", "/relative", "https://user:pass@example.com/"]) {
+      expect(() => normalizeRecipeUrl(value, "sourceUrl")).toThrow();
+    }
+    expect(() => normalizeRecipeUrl("http://example.com/photo.jpg", "image")).toThrow();
+    expect(() => normalizeRecipeUrl(`https://example.com/${"a".repeat(2050)}`, "image")).toThrow(/too long/);
+    expect(() => normalizeRecipeUrl(`https://example.com/${"é".repeat(400)}`, "image")).toThrow(/too long/);
+    expect(safeRecipeUrl("javascript:alert(1)", "sourceUrl")).toBeUndefined();
+  });
+});
 
 describe("normalizeText", () => {
   it("trims a string field", () => {

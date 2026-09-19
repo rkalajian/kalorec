@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getStore } from "../../../lib/store";
 import { getPublicRecipe } from "../../../lib/publicStore";
 import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
+import { safeRecipeUrl } from "../../../lib/normalize";
 import { SESSION_COOKIE } from "../../../lib/session";
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
@@ -19,6 +20,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
   if (
+    !body || typeof body !== "object" || Array.isArray(body) ||
     typeof body.owner !== "string" || !body.owner ||
     typeof body.repo !== "string" || !body.repo ||
     typeof body.slug !== "string" || !body.slug
@@ -57,7 +59,15 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   const slug = dedupeSlug(slugify(source.title), existing.map((r) => r.slug));
   const now = new Date().toISOString();
-  const recipe: Recipe = { ...source, slug, public: false, createdAt: now, updatedAt: now };
+  const recipe: Recipe = {
+    ...source,
+    slug,
+    sourceUrl: safeRecipeUrl(source.sourceUrl, "sourceUrl"),
+    image: safeRecipeUrl(source.image, "image"),
+    public: false,
+    createdAt: now,
+    updatedAt: now,
+  };
 
   try {
     await store.create(recipe);

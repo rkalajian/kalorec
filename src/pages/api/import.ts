@@ -9,8 +9,12 @@ export const POST: APIRoute = async ({ request }) => {
     return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400 });
   }
 
-  if (!body.url || typeof body.url !== "string") {
+  if (!body || typeof body !== "object" || Array.isArray(body) ||
+      typeof body.url !== "string" || !body.url.trim()) {
     return new Response(JSON.stringify({ error: "URL is required" }), { status: 400 });
+  }
+  if (body.url.length > 2048) {
+    return new Response(JSON.stringify({ error: "URL is too long" }), { status: 400 });
   }
 
   try {

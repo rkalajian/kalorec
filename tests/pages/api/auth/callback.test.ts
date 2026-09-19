@@ -129,7 +129,7 @@ describe("GET /api/auth/callback", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const previousCookie = encryptSession(
-      { githubLogin: "rob", accessToken: "gho_old", repo: { owner: "rob", name: "recipes", branch: "main" } },
+      { githubLogin: "rob", accessToken: "gho_old", repo: { owner: "rob", name: "recipes", branch: "main", private: false } },
       "test-secret-value"
     );
 
@@ -148,7 +148,7 @@ describe("GET /api/auth/callback", () => {
     expect(decryptSession(cookieValue, "test-secret-value")).toEqual({
       githubLogin: "rob",
       accessToken: "gho_new",
-      repo: { owner: "rob", name: "recipes", branch: "main" },
+      repo: { owner: "rob", name: "recipes", branch: "main", private: false },
     });
   });
 
@@ -163,7 +163,7 @@ describe("GET /api/auth/callback", () => {
       {
         githubLogin: "alice",
         accessToken: "gho_alice",
-        repo: { owner: "alice", name: "secret-recipes", branch: "main" },
+        repo: { owner: "alice", name: "secret-recipes", branch: "main", private: true },
       },
       "test-secret-value"
     );

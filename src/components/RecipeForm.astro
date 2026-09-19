@@ -1,5 +1,6 @@
 ---
 import type { Recipe } from "../lib/recipe";
+import { safeRecipeUrl } from "../lib/normalize";
 
 interface Props {
   mode: "create" | "edit";
@@ -8,10 +9,11 @@ interface Props {
 }
 
 const { mode, recipe, sha } = Astro.props;
+const repoIsPublic = Astro.locals.session.repo?.private === false;
 const initial = {
   title: recipe?.title ?? "",
-  sourceUrl: recipe?.sourceUrl ?? "",
-  image: recipe?.image ?? "",
+  sourceUrl: safeRecipeUrl(recipe?.sourceUrl, "sourceUrl") ?? "",
+  image: safeRecipeUrl(recipe?.image, "image") ?? "",
   tags: recipe?.tags?.join(", ") ?? "",
   servings: recipe?.servings ?? "",
   prepTime: recipe?.prepTime ?? "",
@@ -37,7 +39,7 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
     <section class="rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
       <label for="import-url" class={tightLabelClass}>Import from link</label>
       <div class="mt-1 flex gap-2">
-        <input type="url" id="import-url" placeholder="https://example.com/recipe" class={inputBase} />
+        <input type="url" id="import-url" maxlength="2048" placeholder="https://example.com/recipe" class={inputBase} />
         <button type="button" id="import-button" class={primaryButtonClass}>Import</button>
       </div>
       <p id="import-message" class="message mt-2 min-h-5 text-sm" role="status"></p>
@@ -47,15 +49,27 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
   <p id="form-message" class="message mt-3 min-h-5 text-sm" role="alert"></p>
 
   <label for="title" class={labelClass}>Title</label>
-  <input type="text" id="title" required class={inputClass} />
+  <input type="text" id="title" required maxlength="200" class={inputClass} />
 
   <label for="tags" class={labelClass}>Tags (comma separated)</label>
   <input type="text" id="tags" class={inputClass} />
 
   <label class="mt-3 flex items-center gap-2 text-sm font-medium">
     <input type="checkbox" id="public" />
-    Make this recipe public
+    Share this recipe on my Kalorec profile
   </label>
+  <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+    This only controls whether the recipe appears on your Kalorec shared profile.
+  </p>
+  {repoIsPublic ? (
+    <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
+      Your selected GitHub repo is public. Every saved recipe JSON file is public on GitHub, even when this is unchecked.
+    </p>
+  ) : (
+    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      Your selected GitHub repo is private. Make it public on GitHub before recipes can appear on your shared profile.
+    </p>
+  )}
 
   <div class="mt-3 grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-2">
     <div>
@@ -72,11 +86,11 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
     </div>
   </div>
 
-  <label for="image" class={labelClass}>Image URL</label>
-  <input type="url" id="image" class={inputClass} />
+  <label for="image" class={labelClass}>Image URL (HTTPS)</label>
+  <input type="url" id="image" maxlength="2048" placeholder="https://example.com/image.jpg" class={inputClass} />
 
   <label for="sourceUrl" class={labelClass}>Source URL</label>
-  <input type="url" id="sourceUrl" class={inputClass} />
+  <input type="url" id="sourceUrl" maxlength="2048" class={inputClass} />
 
   <fieldset class="mt-4 rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
     <legend class="px-1 text-sm font-semibold">Ingredients</legend>

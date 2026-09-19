@@ -17,6 +17,40 @@ export function normalizeText(value: unknown): string | undefined {
   return trimmed || undefined;
 }
 
+export type RecipeUrlField = "sourceUrl" | "image";
+
+/** Accepts only browser-safe external links; images must match our HTTPS-only policy. */
+export function normalizeRecipeUrl(value: unknown, field: RecipeUrlField): string | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value !== "string") throw new Error(`${field} must be a URL`);
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.length > 2048) throw new Error(`${field} is too long`);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error(`${field} must be a valid URL`);
+  }
+  if ((parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+      (field === "image" && parsed.protocol !== "https:") ||
+      parsed.username || parsed.password) {
+    throw new Error(`${field} must be ${field === "image" ? "an HTTPS" : "an HTTP or HTTPS"} URL without credentials`);
+  }
+  if (parsed.href.length > 2048) throw new Error(`${field} is too long`);
+  return parsed.href;
+}
+
+/** External GitHub JSON may bypass our write API; omit unsafe links when rendering it. */
+export function safeRecipeUrl(value: unknown, field: RecipeUrlField): string | undefined {
+  try {
+    return normalizeRecipeUrl(value, field);
+  } catch {
+    return undefined;
+  }
+}
+
 /** Trims each nutrition field and drops empty ones. Returns undefined if none remain. */
 export function normalizeNutrition(value: unknown): Nutrition | undefined {
   if (!value || typeof value !== "object") return undefined;

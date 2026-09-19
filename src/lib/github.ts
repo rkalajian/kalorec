@@ -1,6 +1,8 @@
 import type { Recipe } from "./recipe";
 
 const RECIPES_DIR = "data/recipes";
+const CONTENTS_DIRECTORY_LIMIT = 1000;
+const LIST_CONCURRENCY = 8;
 
 export interface GithubClient {
   repos: {
@@ -53,24 +55,31 @@ export class RecipeStore {
         path: RECIPES_DIR,
         ...(branch ? { ref: branch } : {}),
       });
-      entries = Array.isArray(res.data) ? res.data : [];
+      if (!Array.isArray(res.data)) {
+        throw new Error("GitHub returned an invalid recipe directory listing");
+      }
+      entries = res.data;
     } catch (err: any) {
       if (err.status === 404) return [];
       throw err;
     }
+    if (entries.length >= CONTENTS_DIRECTORY_LIMIT) {
+      throw new Error(
+        "Recipe directory listing reached GitHub Contents API's 1,000-entry limit; reduce files in data/recipes"
+      );
+    }
+
     const files = entries.filter((e) => e.type === "file" && e.name.endsWith(".json"));
-    const settled = await Promise.allSettled(
-      files.map((f) => this.get(f.name.replace(/\.json$/, "")))
-    );
     const recipes: Recipe[] = [];
-    settled.forEach((outcome, i) => {
-      if (outcome.status === "fulfilled") {
-        if (outcome.value) recipes.push(outcome.value.recipe);
-      } else {
-        const reason = outcome.reason instanceof Error ? outcome.reason.message : String(outcome.reason);
-        console.warn(`Skipping recipe file ${files[i]?.name}: ${reason}`);
+    for (let index = 0; index < files.length; index += LIST_CONCURRENCY) {
+      const batch = files.slice(index, index + LIST_CONCURRENCY);
+      const stored = await Promise.all(batch.map((file) => this.get(file.name.replace(/\.json$/, ""))));
+      const missingIndex = stored.findIndex((item) => item === null);
+      if (missingIndex !== -1) {
+        throw new Error(`Recipe file disappeared while listing: ${batch[missingIndex].name}`);
       }
-    });
+      recipes.push(...stored.flatMap((item) => (item ? [item.recipe] : [])));
+    }
     return recipes;
   }
 
