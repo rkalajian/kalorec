@@ -1,28 +1,28 @@
 # Goal
 
-Implement four reviewed improvements: disclose public-repo recipe visibility; secure URL import and bound response size; make GitHub recipe listing complete and reliable; validate saved URLs and improve input labels.
+Keep source recipes in a private GitHub repo and publish only selected recipes into a distinct public GitHub repo. Anonymous profile pages must read only published copies.
 
-# Steps and targets
+# Plan and targets
 
-1. Privacy (executor: subagent): update settings and recipe form messaging, plus README/tests where relevant. In a public repo, every recipe JSON is public on GitHub regardless of the app's shared-profile toggle.
-2. Import security (executor: subagent): validate redirect destinations and resolved addresses, reject unsafe targets, enforce a real streamed byte limit, add focused tests. Target `src/lib/extract/index.ts` and its tests.
-3. Listing reliability (executor: subagent): surface failed reads, avoid unbounded parallel requests, handle the Contents API 1,000-entry limit or fail explicitly at it; add focused tests. Target `src/lib/github.ts`, `tests/lib/github.test.ts`, and any needed interfaces.
-4. Validation and accessibility (executor: main): validate persisted `sourceUrl`/`image` schemes and size, add labels for search and generated ingredient/instruction fields, and tests. Target normalization/API/form/list files.
-5. Integrate and verify with `npm test`, `npm run build`, and `git diff --check`.
+1. Storage boundary (executor: main): make `RecipeStore` directory configurable; read public profiles and copy sources only from `data/shared-recipes` in the public repo. Target `src/lib/github.ts`, `src/lib/publicStore.ts`, tests.
+2. Sharing configuration (executor: subagent): add an optional public sharing repo to the encrypted session, validate that it is public, writable, and distinct from the private source repo; expose selection and profile link in Settings. Target session, settings route/page, relevant tests.
+3. Publication lifecycle (executor: main): on create/edit/delete, synchronize chosen recipes to the sharing repo. Remove a public copy before unsharing/deleting its source. Report cross-repo partial failures without claiming publication succeeded. Target recipe API routes, new publishing helper, tests.
+4. UX and docs (executor: subagent): explain private source and explicit public copies, including Git history after unsharing; update recipe form and README. Target form/docs.
+5. Integrate, migrate existing shared recipes on first sharing-repo selection, and verify tests, typecheck, build, and diff check.
 
-# Acceptance criteria
+# Acceptance
 
-- Public repo selection and recipe form clearly disclose GitHub visibility.
-- Import cannot follow unchecked redirects or fetch private/resolved internal destinations; body limit applies without `Content-Length`.
-- Listing never silently returns partial results after failed reads; request load is bounded; large directory behavior is explicit.
-- API rejects unsafe URL schemes and oversized relevant fields; search and dynamic rows have programmatic labels.
-- Tests and build pass.
+- New private source recipes never appear in anonymous routes unless explicitly shared.
+- Sharing requires a private source repo and a separate public sharing repo.
+- Public pages read only `data/shared-recipes`; public selection publishes existing flagged recipes.
+- Unsharing or deleting removes the public copy before changing the source.
+- GitHub history permanence and public source repo exposure are disclosed.
+- Tests, typecheck, and build pass.
 
 # Verification
 
-- Completed all four improvements.
-- `npm test`: 178 passed.
-- `npm run build`: passed.
+- `npm test`: 207 tests passed across 23 files.
 - `npx tsc --noEmit`: passed.
+- `npm run build`: passed.
 - `git diff --check`: passed.
-- WCAG audit via Claude unavailable; focused manual review completed. User requested no further Claude use.
+- Full browser accessibility audit unavailable locally (`wcag-audit` command absent); changed Settings controls reviewed for labels, focus visibility, and target size.

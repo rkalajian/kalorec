@@ -98,6 +98,7 @@ describe("GET /api/auth/callback", () => {
       githubLogin: "rob",
       accessToken: "gho_new",
       repo: null,
+      sharingRepo: null,
     });
   });
 
@@ -129,7 +130,11 @@ describe("GET /api/auth/callback", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const previousCookie = encryptSession(
-      { githubLogin: "rob", accessToken: "gho_old", repo: { owner: "rob", name: "recipes", branch: "main", private: false } },
+      {
+        githubLogin: "rob", accessToken: "gho_old",
+        repo: { owner: "rob", name: "recipes", branch: "main", private: true },
+        sharingRepo: { owner: "rob", name: "shared-recipes", branch: "main", private: false },
+      },
       "test-secret-value"
     );
 
@@ -148,7 +153,8 @@ describe("GET /api/auth/callback", () => {
     expect(decryptSession(cookieValue, "test-secret-value")).toEqual({
       githubLogin: "rob",
       accessToken: "gho_new",
-      repo: { owner: "rob", name: "recipes", branch: "main", private: false },
+      repo: { owner: "rob", name: "recipes", branch: "main", private: true },
+      sharingRepo: { owner: "rob", name: "shared-recipes", branch: "main", private: false },
     });
   });
 
@@ -164,6 +170,7 @@ describe("GET /api/auth/callback", () => {
         githubLogin: "alice",
         accessToken: "gho_alice",
         repo: { owner: "alice", name: "secret-recipes", branch: "main", private: true },
+        sharingRepo: { owner: "alice", name: "shared-recipes", branch: "main", private: false },
       },
       "test-secret-value"
     );
@@ -184,6 +191,7 @@ describe("GET /api/auth/callback", () => {
       githubLogin: "bob",
       accessToken: "gho_bob",
       repo: null,
+      sharingRepo: null,
     });
   });
 });

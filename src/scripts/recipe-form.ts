@@ -166,6 +166,12 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  const sharingInput = document.getElementById("public") as HTMLInputElement;
+  if (sharingInput.disabled && initial.public) {
+    showMessage("form-message", "Select a private recipe repo and its public sharing repo in Settings before editing this shared recipe.", "error");
+    return;
+  }
+
   const payload = {
     title,
     tags: (document.getElementById("tags") as HTMLInputElement).value.split(",").map((t) => t.trim()).filter(Boolean),
@@ -186,7 +192,7 @@ form.addEventListener("submit", async (event) => {
       sugar: (document.getElementById("nutrition-sugar") as HTMLInputElement).value.trim(),
       sodium: (document.getElementById("nutrition-sodium") as HTMLInputElement).value.trim(),
     },
-    public: (document.getElementById("public") as HTMLInputElement).checked,
+    public: sharingInput.checked,
     expectedSha: form.dataset.sha || undefined,
   };
 
@@ -201,7 +207,7 @@ form.addEventListener("submit", async (event) => {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || "Save failed");
-    window.location.href = `/recipes/${json.slug}`;
+    window.location.href = `/recipes/${encodeURIComponent(json.slug)}${json.warning ? "?sharing=failed" : ""}`;
   } catch (err) {
     showMessage("form-message", err instanceof Error ? err.message : "Save failed", "error");
   }

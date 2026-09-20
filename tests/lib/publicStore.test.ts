@@ -45,15 +45,15 @@ describe("listPublicRecipes", () => {
 
   it("returns only recipes marked public", async () => {
     mockOctokitInstance.repos.getContent.mockImplementation(async ({ path }: { path: string }) => {
-      if (path === "data/recipes") {
+      if (path === "data/shared-recipes") {
         return {
           data: [
-            { type: "file", name: "chili.json", path: "data/recipes/chili.json" },
-            { type: "file", name: "secret.json", path: "data/recipes/secret.json" },
+            { type: "file", name: "chili.json", path: "data/shared-recipes/chili.json" },
+            { type: "file", name: "secret.json", path: "data/shared-recipes/secret.json" },
           ],
         };
       }
-      if (path === "data/recipes/chili.json") {
+      if (path === "data/shared-recipes/chili.json") {
         return { data: { type: "file", content: b64(publicRecipe), sha: "sha-1" } };
       }
       return { data: { type: "file", content: b64(privateRecipe), sha: "sha-2" } };
@@ -62,10 +62,10 @@ describe("listPublicRecipes", () => {
     expect(recipes).toEqual([publicRecipe]);
   });
 
-  it("caches results so a second call within the TTL doesn't hit the API again", async () => {
+  it("rechecks the sharing repo so unshared recipes do not linger in cache", async () => {
     mockOctokitInstance.repos.getContent.mockImplementation(async ({ path }: { path: string }) => {
-      if (path === "data/recipes") {
-        return { data: [{ type: "file", name: "chili.json", path: "data/recipes/chili.json" }] };
+      if (path === "data/shared-recipes") {
+        return { data: [{ type: "file", name: "chili.json", path: "data/shared-recipes/chili.json" }] };
       }
       return { data: { type: "file", content: b64(publicRecipe), sha: "sha-1" } };
     });
@@ -73,7 +73,7 @@ describe("listPublicRecipes", () => {
     const callsAfterFirst = mockOctokitInstance.repos.getContent.mock.calls.length;
     const second = await listPublicRecipes("cache-owner", "cache-repo");
     expect(second).toEqual(first);
-    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBe(callsAfterFirst);
+    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBeGreaterThan(callsAfterFirst);
   });
 });
 
@@ -103,14 +103,26 @@ describe("getPublicRecipe", () => {
     expect(await getPublicRecipe("rob", "recipes", "missing")).toBeNull();
   });
 
-  it("caches results so a second call within the TTL doesn't hit the API again", async () => {
+  it("rechecks a recipe after it is unpublished", async () => {
     mockOctokitInstance.repos.getContent.mockResolvedValue({
       data: { type: "file", content: b64(publicRecipe), sha: "sha-1" },
     });
     const first = await getPublicRecipe("cache-owner", "cache-repo", "chili");
     const callsAfterFirst = mockOctokitInstance.repos.getContent.mock.calls.length;
-    const second = await getPublicRecipe("cache-owner", "cache-repo", "chili");
-    expect(second).toEqual(first);
-    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBe(callsAfterFirst);
+    mockOctokitInstance.repos.getContent.mockRejectedValue(Object.assign(new Error("Not Found"), { status: 404 }));
+    expect(await getPublicRecipe("cache-owner", "cache-repo", "chili")).toBeNull();
+    expect(mockOctokitInstance.repos.getContent.mock.calls.length).toBeGreaterThan(callsAfterFirst);
+  });
+
+  it("rejects a public file whose slug does not match its path", async () => {
+    mockOctokitInstance.repos.getContent.mockResolvedValue({
+      data: { type: "file", content: b64({ ...publicRecipe, slug: "different" }), sha: "sha-1" },
+    });
+    expect(await getPublicRecipe("rob", "recipes", "chili")).toBeNull();
+  });
+
+  it("does not read invalid slugs", async () => {
+    expect(await getPublicRecipe("rob", "recipes", "../secret")).toBeNull();
+    expect(mockOctokitInstance.repos.getContent).not.toHaveBeenCalled();
   });
 });

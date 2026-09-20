@@ -9,7 +9,8 @@ interface Props {
 }
 
 const { mode, recipe, sha } = Astro.props;
-const repoIsPublic = Astro.locals.session.repo?.private === false;
+const sourceRepoIsPublic = Astro.locals.session.repo?.private === false;
+const sharingRepo = Astro.locals.session.sharingRepo;
 const initial = {
   title: recipe?.title ?? "",
   sourceUrl: safeRecipeUrl(recipe?.sourceUrl, "sourceUrl") ?? "",
@@ -54,20 +55,30 @@ const dangerButtonClass = "inline-block rounded-md bg-red-600 px-4 py-2 text-sm 
   <label for="tags" class={labelClass}>Tags (comma separated)</label>
   <input type="text" id="tags" class={inputClass} />
 
-  <label class="mt-3 flex items-center gap-2 text-sm font-medium">
-    <input type="checkbox" id="public" />
-    Share this recipe on my Kalorec profile
-  </label>
-  <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-    This only controls whether the recipe appears on your Kalorec shared profile.
-  </p>
-  {repoIsPublic ? (
-    <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
-      Your selected GitHub repo is public. Every saved recipe JSON file is public on GitHub, even when this is unchecked.
+  <fieldset class="mt-3">
+    <legend class={tightLabelClass}>Sharing</legend>
+    <label class="mt-1 flex items-center gap-2 text-sm font-medium" for="public">
+      <input type="checkbox" id="public" disabled={!sharingRepo || sourceRepoIsPublic} />
+      Publish a copy on my public Kalorec profile
+    </label>
+  </fieldset>
+  {sharingRepo ? (
+    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      Your source recipe stays in the private repo. Kalorec publishes this recipe to <code>{sharingRepo.owner}/{sharingRepo.name}</code> for your public profile.
     </p>
   ) : (
     <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-      Your selected GitHub repo is private. Make it public on GitHub before recipes can appear on your shared profile.
+      Choose a separate public sharing repo in Settings before publishing recipes. Source recipes stay in your private repo.
+    </p>
+  )}
+  {sourceRepoIsPublic && (
+    <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
+      Your source repo is public. Its recipe files may already be public on GitHub, and their Git history can remain accessible after you make the repo private or unshare a recipe.
+    </p>
+  )}
+  {sharingRepo && (
+    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+      Unpublishing removes the current public copy, but it cannot erase copies or commits already visible in GitHub history.
     </p>
   )}
 
