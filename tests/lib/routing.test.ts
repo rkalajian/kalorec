@@ -21,6 +21,8 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/settings")).toBe(false);
     expect(isPublicPath("/recipes/chili")).toBe(false);
     expect(isPublicPath("/api/recipes")).toBe(false);
+    expect(isPublicPath("/shopping-list")).toBe(false);
+    expect(isPublicPath("/api/shopping-list")).toBe(false);
   });
 
   it("treats the about and how-to-use pages as public", () => {
@@ -38,6 +40,8 @@ describe("decideRoute", () => {
   it("redirects to login when there is no session, except at the root", () => {
     expect(decideRoute(null, "/settings")).toEqual({ redirect: "/api/auth/login" });
     expect(decideRoute(null, "/recipes/chili")).toEqual({ redirect: "/api/auth/login" });
+    expect(decideRoute(null, "/shopping-list")).toEqual({ redirect: "/api/auth/login" });
+    expect(decideRoute(null, "/api/shopping-list")).toEqual({ redirect: "/api/auth/login" });
   });
 
   it("shows the landing page at the root when there is no session", () => {
@@ -62,6 +66,8 @@ describe("decideRoute", () => {
 
   it("redirects to settings when the session has no repo chosen", () => {
     expect(decideRoute(sessionNoRepo, "/")).toEqual({ redirect: "/settings" });
+    expect(decideRoute(sessionNoRepo, "/shopping-list")).toEqual({ redirect: "/settings" });
+    expect(decideRoute(sessionNoRepo, "/api/shopping-list")).toEqual({ redirect: "/settings" });
   });
 
   it("still redirects a logged-in, repo-less session away from the root", () => {
