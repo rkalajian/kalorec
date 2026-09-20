@@ -8,7 +8,7 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 - Choose a distinct public sharing repo in Settings. Recipes marked for publication are copied to `data/shared-recipes/<slug>.json` there; anonymous profiles read only those copies at `/u/<owner>/<sharing-repo>`.
 - Server-side routes use your OAuth access token to write the private source and selected public copies; anonymous profile routes read only the public copies.
 - Pasting a link parses the page's `schema.org/Recipe` structured data when present, falling back to a best-effort heuristic extraction otherwise.
-- Shopping lists collect ingredient lines from selected recipes without changing quantities. Edit, check, add, remove, copy, or print items at `/shopping-list`; **Save list** writes `data/shopping-list.json` to the private source repo. Reload warns before discarding unsaved changes, and stale saves are rejected. Git history retains older list contents, so keep the source repo private.
+- Shopping lists collect ingredient lines from selected recipes without changing quantities. Edit, check, add, remove, copy, or print items at `/shopping-list`; **Save list** writes `data/shopping-list.json` to the private source repo. **Reload** replaces the browser list with the saved version and warns before discarding unsaved edits. Saves use the last loaded Git file version and reject a concurrent change, so reload before retrying. Git history retains older list contents, so keep the source repo private.
 - Use the recipe sharing setting to publish a separate, read-only copy at `/u/<owner>/<sharing-repo>` (and `/u/<owner>/<sharing-repo>/<slug>` for the recipe itself). The source recipe remains in the private source repo.
 - Unpublishing deletes the current public copy, but cannot erase GitHub history or copies made while it was public. Recipes stored in a previously public source repo may remain exposed in its Git history, even after moving to private source storage.
 - Anonymous visitors land on a public homepage at `/` — a pitch for the app, a "Log in with GitHub" button, and a "View a shared profile" box that jumps straight to a `/u/<owner>/<repo>` link (paste a share link or type `owner/repo`). `/about` and `/how-to-use` are always reachable from the header nav, logged in or out.
@@ -24,7 +24,9 @@ Astro app for capturing recipes — typed in by hand or imported from a link —
 
 ## Upgrading an existing account
 
-Make the selected source repo private on GitHub, then click **Reload** beside it in Settings. Select a separate empty public sharing repo. Kalorec copies recipes already marked for sharing into that repo and saves the pairing in `data/kalorec-sharing.json` in the private source repo. Share links now use the public sharing repo name. Previously exposed source files can remain in Git history or forks.
+If your source repo is public, copy its `data/recipes` files into a private repo and verify the copies before removing the public source files. Choose the private repo in Settings. Keep a different public repo for shared copies; Kalorec records that pairing in `data/kalorec-sharing.json` in the private repo. Removing public source files does not erase their Git history, forks, or cached copies.
+
+For this deployment, choose `rkalajian/privrec` as the **Private recipe repo** and `rkalajian/recipies` as the **Public sharing repo** in Settings. The public repo keeps only explicitly shared copies under `data/shared-recipes`; saved shopping lists belong in `privrec`.
 
 ## Deploying to Netlify
 

@@ -20,3 +20,15 @@ Add a private shopping list built from selected recipes. Keep ingredient lines a
 # Result
 
 Shopping list implemented. Full suite: 222 tests passed. TypeScript check, production build, and diff check passed. Frontend accessibility audit findings addressed.
+
+## Follow-up: private repo move and documentation
+
+Goal: verify all source recipes in `rkalajian/privrec`, remove the redundant source copies from the public code repo only after byte-level verification, and update About, How to Use, and README for the deployed shopping list and separate private/public repos.
+
+1. Inspect both repositories, compare recipe paths and contents, and verify the private repo's sharing configuration. Executor: main.
+2. Update `src/pages/about.astro`, `src/pages/how-to-use.astro`, and `README.md` with accurate shopping list and repo guidance. Executor: subagent.
+3. Remove only verified redundant `data/recipes/*.json` files from the public repo, retain `data/shared-recipes`, then test, build, and check the diff. Executor: main.
+
+Acceptance: destination contains every source recipe with matching content apart from line endings; public sharing copies remain available; docs explain private shopping lists and Git history exposure; checks pass.
+
+Result: `privrec` has all 22 source recipe paths with identical content ignoring line endings, and its sharing config points to `rkalajian/recipies`. Public source recipe files removed; 20 published copies retained. Docs updated. Full suite: 222 tests passed. TypeScript check, production build, and diff checks passed.

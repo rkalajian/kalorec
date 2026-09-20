@@ -7,10 +7,10 @@ import Layout from "../layouts/Layout.astro";
     Kalorec is a recipe manager that stores your recipes as plain JSON files in a GitHub repo you choose — not a database you don't control. Add recipes by hand or import them from a link, tag and search them, and edit them like any other file in your repo.
   </p>
   <p class="mt-4 text-zinc-700 dark:text-zinc-300">
-    Your source recipes live in a private GitHub repo you choose, so they stay portable and versioned. To share one, Kalorec copies that recipe into a separate public sharing repo for your profile. Visitors read only those published copies and can view or copy them.
+    Your recipes and saved shopping list live in a private GitHub repo you choose, so they stay portable and versioned. To share one, Kalorec copies that recipe into a separate public sharing repo for your profile. Visitors read only those published copies and can view or copy them.
   </p>
   <p class="mt-4 text-zinc-700 dark:text-zinc-300">
-    Unpublishing removes the current public copy, but GitHub history and copies made while it was public can persist. If you previously stored recipes in a public source repo, those files may remain exposed in its history even after moving to private source storage.
+    Saving a shopping list creates a Git commit, so previous list contents remain in Git history. Keep the source repo private. Unpublishing removes the current public recipe copy, but GitHub history and copies made while it was public can persist. Recipes previously stored in a public source repo may remain exposed in that repo's history after moving to private source storage.
   </p>
   <p class="mt-4 text-zinc-700 dark:text-zinc-300">
     New here? See <a href="/how-to-use" class="text-green-700 dark:text-green-400">How to Use</a>.

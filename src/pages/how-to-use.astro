@@ -8,9 +8,10 @@ import Layout from "../layouts/Layout.astro";
     <li>Pick a private source repo in Settings — that's where your recipes will live.</li>
     <li>Pick a different public sharing repo in Settings. Kalorec puts published copies there, and your profile link uses that repo.</li>
     <li>Add a recipe: type it in by hand, or paste a link to import it automatically.</li>
-    <li>Open Shopping list, choose recipes, and add their ingredient lines. Edit or check items, then save the list to your private repo. You can also copy or print it.</li>
+    <li>Open Shopping list, choose recipes, and add their ingredient lines. Quantities stay as written. Edit, check, add, or remove items, then save the list to your private repo. You can also copy or print it.</li>
+    <li>Reload replaces the list in your browser with the saved version; it warns if you have unsaved edits. If another browser or GitHub changes the saved list first, saving is rejected so you can reload and avoid overwriting those changes.</li>
     <li>Check "Publish a copy on my public Kalorec profile" for recipes you want visitors to see, then copy your share link from Settings.</li>
-    <li>Unpublishing removes the current public copy. GitHub history and copies made while it was public can persist. Recipes once stored in a public source repo can remain exposed in that repo's history.</li>
+    <li>Each saved shopping list and recipe update is a Git commit. Keep the source repo private: old list contents stay in its history. Unpublishing removes the current public recipe copy, but GitHub history and copies made while it was public can persist. Recipes once stored in a public source repo can remain exposed in that repo's history.</li>
     <li>Browse a shared profile and click "Add to my recipes" to copy someone else's public recipe into your own repo.</li>
   </ol>
 </Layout>
