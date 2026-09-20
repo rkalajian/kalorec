@@ -1,0 +1,44 @@
+{
+  "slug": "spanish-rice-recipe",
+  "title": "Spanish Rice Recipe",
+  "sourceUrl": "https://lilluna.com/food-tutorial-spanish-rice/#wprm-recipe-container-98784",
+  "image": "https://lilluna.com/wp-content/uploads/2017/10/spanish-rice-resize-5.jpg",
+  "tags": [
+    "rice",
+    "side"
+  ],
+  "public": true,
+  "servings": "8",
+  "prepTime": "5m",
+  "cookTime": "40m",
+  "ingredients": [
+    "2 tablespoons vegetable oil",
+    "2 cups long-grain white rice",
+    "1 cube chicken-flavored bouillon",
+    "4 cups water ((or 4 cups chicken lower sodium chicken broth - and no bouillon))",
+    "1 (8-ounce) can tomato sauce",
+    "1 teaspoon minced garlic",
+    "1 teaspoon salt",
+    "1 teaspoon ground cumin",
+    "dash garlic pepper",
+    "chopped fresh cilantro ((optional))"
+  ],
+  "instructions": [
+    "Heat oil in large frying pan over medium heat.",
+    "Add rice and cook, stirring until golden brown, about 5 minutes.",
+    "Combine bouillon and water in a microwave-safe container and microwave for 3 minutes.",
+    "When rice is brown, add bouillon mixture, tomato sauce, salt, garlic, cumin and garlic pepper to the pan.",
+    "Stir and cover the pan. Let simmer for 30-40 minutes, stirring occasionally, or until all is cooked and there is no liquid left. Fluff before serving and top with cilantro if desired."
+  ],
+  "nutrition": {
+    "calories": "90 kcal",
+    "protein": "1 g",
+    "fat": "4 g",
+    "carbohydrates": "13 g",
+    "fiber": "1 g",
+    "sugar": "1 g",
+    "sodium": "447 mg"
+  },
+  "createdAt": "2026-07-26T13:16:16.791Z",
+  "updatedAt": "2026-08-10T18:53:34.266Z"
+}
