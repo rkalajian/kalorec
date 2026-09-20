@@ -1,28 +1,22 @@
 # Goal
 
-Keep source recipes in a private GitHub repo and publish only selected recipes into a distinct public GitHub repo. Anonymous profile pages must read only published copies.
+Add a private shopping list built from selected recipes. Keep ingredient lines as written; users can edit, check, add, remove, copy, and print items. Persist the list in the selected private source repo.
 
 # Plan and targets
 
-1. Storage boundary (executor: main): make `RecipeStore` directory configurable; read public profiles and copy sources only from `data/shared-recipes` in the public repo. Target `src/lib/github.ts`, `src/lib/publicStore.ts`, tests.
-2. Sharing configuration (executor: subagent): add an optional public sharing repo to the encrypted session, validate that it is public, writable, and distinct from the private source repo; expose selection and profile link in Settings. Target session, settings route/page, relevant tests.
-3. Publication lifecycle (executor: main): on create/edit/delete, synchronize chosen recipes to the sharing repo. Remove a public copy before unsharing/deleting its source. Report cross-repo partial failures without claiming publication succeeded. Target recipe API routes, new publishing helper, tests.
-4. UX and docs (executor: subagent): explain private source and explicit public copies, including Git history after unsharing; update recipe form and README. Target form/docs.
-5. Integrate, migrate existing shared recipes on first sharing-repo selection, and verify tests, typecheck, build, and diff check.
+1. Private storage and API (executor: Codex subagent): add `data/shopping-list.json` storage with strict item validation, private-repo verification, optimistic SHA updates, and authenticated GET/PUT. Target new `src/lib/shoppingList.ts`, `src/pages/api/shopping-list.ts`, and focused tests.
+2. Interface (executor: main): add `/shopping-list` page and client script for recipe selection, raw ingredient collection, editable checklist, save/reload conflict handling, copy, and print. Add authenticated navigation. Target new page/script and `src/layouts/Layout.astro`.
+3. Docs and integration (executor: main): explain list behavior and verify route privacy, keyboard access, labels, visible focus, and mobile layout. Target README/how-to-use and tests where material.
+4. Run tests, TypeScript check, production build, and diff check.
 
 # Acceptance
 
-- New private source recipes never appear in anonymous routes unless explicitly shared.
-- Sharing requires a private source repo and a separate public sharing repo.
-- Public pages read only `data/shared-recipes`; public selection publishes existing flagged recipes.
-- Unsharing or deleting removes the public copy before changing the source.
-- GitHub history permanence and public source repo exposure are disclosed.
-- Tests, typecheck, and build pass.
+- Anonymous visitors cannot read or write shopping lists; data is stored only in the current private source repo.
+- Recipe selection adds original ingredient lines without automatic quantity merging.
+- Items can be edited, checked, added, removed, copied, and printed.
+- Save persists across reload; concurrent changes produce a clear conflict instead of overwriting data.
+- Tests, typecheck, build, and diff check pass.
 
-# Verification
+# Result
 
-- `npm test`: 207 tests passed across 23 files.
-- `npx tsc --noEmit`: passed.
-- `npm run build`: passed.
-- `git diff --check`: passed.
-- Full browser accessibility audit unavailable locally (`wcag-audit` command absent); changed Settings controls reviewed for labels, focus visibility, and target size.
+Shopping list implemented. Full suite: 222 tests passed. TypeScript check, production build, and diff check passed. Frontend accessibility audit findings addressed.
