@@ -1,0 +1,44 @@
+{
+  "slug": "crispy-falafel",
+  "title": "Crispy Falafel",
+  "sourceUrl": "https://cookieandkate.com/crispy-falafel-recipe/",
+  "image": "https://cookieandkate.com/images/2018/05/baked-falafel-recipe-225x225.jpg",
+  "tags": [
+    "vegan",
+    "dinner",
+    "beans"
+  ],
+  "public": true,
+  "servings": "12",
+  "prepTime": "20m",
+  "cookTime": "30m",
+  "ingredients": [
+    "¼ cup + 1 tablespoon extra-virgin olive oil",
+    "1 cup dried (uncooked/raw) chickpeas, rinsed, picked over and soaked for at least 4 hours and up to 24 hours in the refrigerator",
+    "½ cup roughly chopped red onion (about ½ small red onion)",
+    "½ cup packed fresh parsley (mostly leaves but small stems are ok)",
+    "½ cup packed fresh cilantro (mostly leaves but small stems are ok)",
+    "4 cloves garlic, quartered",
+    "1 teaspoon fine sea salt",
+    "½ teaspoon (about 25 twists) freshly ground black pepper",
+    "½ teaspoon ground cumin",
+    "¼ teaspoon ground cinnamon"
+  ],
+  "instructions": [
+    "With an oven rack in the middle position, preheat oven to 375 degrees Fahrenheit. Pour ¼ cup of the olive oil into a large, rimmed baking sheet and turn until the pan is evenly coated.",
+    "In a food processor, combine the soaked and drained chickpeas, onion, parsley, cilantro, garlic, salt, pepper, cumin, cinnamon, and the remaining 1 tablespoon of olive oil. Process until smooth, about 1 minute.",
+    "Using your hands, scoop out about 2 tablespoons of the mixture at a time. Shape the falafel into small patties, about 2 inches wide and ½ inch thick. Place each falafel on your oiled pan.",
+    "Bake for 25 to 30 minutes, carefully flipping the falafels halfway through baking, until the falafels are deeply golden on both sides. These falafels keep well in the refrigerator for up to 4 days, or in the freezer for several months."
+  ],
+  "nutrition": {
+    "calories": "354 calories",
+    "protein": "10.9 g",
+    "fat": "20.7 g",
+    "carbohydrates": "34.6 g",
+    "fiber": "6.9 g",
+    "sugar": "6.1 g",
+    "sodium": "578.6 mg"
+  },
+  "createdAt": "2026-07-26T20:31:42.013Z",
+  "updatedAt": "2026-08-10T18:51:53.396Z"
+}
