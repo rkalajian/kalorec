@@ -1,0 +1,66 @@
+---
+import type { Recipe } from "../lib/recipe";
+import { safeRecipeUrl } from "../lib/normalize";
+
+interface Props {
+  recipe: Recipe;
+  backHref: string;
+  backLabel: string;
+}
+
+const { recipe, backHref, backLabel } = Astro.props;
+const imageUrl = safeRecipeUrl(recipe.image, "image");
+const sourceUrl = safeRecipeUrl(recipe.sourceUrl, "sourceUrl");
+const nutrition = recipe.nutrition ? Object.entries(recipe.nutrition).filter(([, value]) => value) : [];
+---
+
+<article>
+  <a href={backHref} class="text-link text-sm">← {backLabel}</a>
+  <header class="surface-card mt-5 overflow-hidden">
+    <div class="grid lg:grid-cols-2">
+      <div class="flex flex-col justify-center p-6 sm:p-9 lg:p-10">
+        <p class="eyebrow">From the collection</p>
+        <h1 class="page-title mt-3">{recipe.title}</h1>
+        {recipe.tags.length > 0 && <ul class="mt-5 flex list-none flex-wrap gap-2 p-0">{recipe.tags.map((tag) => <li class="pill">{tag}</li>)}</ul>}
+        {(recipe.servings || recipe.prepTime || recipe.cookTime) && (
+          <dl class="mt-7 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-5 sm:grid-cols-3">
+            {recipe.servings && <div><dt class="muted text-xs font-bold uppercase tracking-wide">Servings</dt><dd class="mt-1 font-semibold">{recipe.servings}</dd></div>}
+            {recipe.prepTime && <div><dt class="muted text-xs font-bold uppercase tracking-wide">Prep time</dt><dd class="mt-1 font-semibold">{recipe.prepTime}</dd></div>}
+            {recipe.cookTime && <div><dt class="muted text-xs font-bold uppercase tracking-wide">Cook time</dt><dd class="mt-1 font-semibold">{recipe.cookTime}</dd></div>}
+          </dl>
+        )}
+        <div class="mt-7 flex flex-wrap gap-2"><slot name="actions" /></div>
+      </div>
+      {imageUrl ? <img src={imageUrl} alt={recipe.title} class="aspect-[4/3] h-full max-h-[520px] w-full object-cover lg:aspect-auto" /> : (
+        <div class="grid min-h-52 place-items-center bg-[var(--sage)]" aria-hidden="true"><span class="font-serif text-9xl text-[var(--forest)] opacity-60">{recipe.title.charAt(0).toUpperCase()}</span></div>
+      )}
+    </div>
+  </header>
+
+  <div class="mt-7 grid items-start gap-6 lg:grid-cols-[minmax(240px,.78fr)_minmax(0,1.22fr)]">
+    <section class="surface-card p-6 sm:p-8" aria-labelledby="ingredients-heading">
+      <p class="eyebrow">Gather</p><h2 id="ingredients-heading" class="section-title mt-2">Ingredients</h2>
+      {recipe.ingredients.length ? (
+        <ul class="mt-5 divide-y divide-[var(--line)]">
+          {recipe.ingredients.map((item) => <li class="py-3 leading-relaxed first:pt-0 last:pb-0">{item}</li>)}
+        </ul>
+      ) : <p class="muted mt-4">No ingredients listed.</p>}
+    </section>
+    <section class="surface-card p-6 sm:p-8" aria-labelledby="instructions-heading">
+      <p class="eyebrow">Make</p><h2 id="instructions-heading" class="section-title mt-2">Instructions</h2>
+      {recipe.instructions.length ? (
+        <ol class="mt-5 space-y-5">
+          {recipe.instructions.map((step, index) => <li class="flex gap-4 leading-relaxed"><span class="grid size-8 shrink-0 place-items-center rounded-full bg-[var(--sage)] text-sm font-bold text-[var(--forest)]" aria-hidden="true">{index + 1}</span><span><span class="sr-only">Step {index + 1}: </span>{step}</span></li>)}
+        </ol>
+      ) : <p class="muted mt-4">No instructions listed.</p>}
+    </section>
+  </div>
+
+  {(recipe.notes || nutrition.length > 0 || sourceUrl) && (
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+      {recipe.notes && <section class="surface-card p-6 sm:p-8"><h2 class="section-title">Notes</h2><p class="mt-4 whitespace-pre-wrap leading-relaxed">{recipe.notes}</p></section>}
+      {nutrition.length > 0 && <section class="surface-card p-6 sm:p-8"><h2 class="section-title">Nutrition <span class="muted font-sans text-sm font-normal">per serving</span></h2><dl class="mt-4 grid grid-cols-2 gap-x-5 gap-y-3">{nutrition.map(([key, value]) => <div class="border-b border-[var(--line)] pb-2"><dt class="muted text-sm capitalize">{key}</dt><dd class="font-semibold">{value}</dd></div>)}</dl></section>}
+      {sourceUrl && <section class="surface-card p-6 sm:p-8"><h2 class="section-title">Source</h2><a href={sourceUrl} target="_blank" rel="noopener noreferrer" class="text-link mt-3 block break-all">View original recipe ↗</a></section>}
+    </div>
+  )}
+</article>

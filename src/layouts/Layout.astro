@@ -8,6 +8,7 @@ interface Props {
 }
 const { title } = Astro.props;
 const session = Astro.props.session !== undefined ? Astro.props.session : Astro.locals.session;
+const path = Astro.url.pathname;
 ---
 <!doctype html>
 <html lang="en">
@@ -16,27 +17,43 @@ const session = Astro.props.session !== undefined ? Astro.props.session : Astro.
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} · Kalorec</title>
   </head>
-  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 print:bg-white print:text-black">
-    <header class="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 px-6 py-4 dark:border-zinc-800 print:hidden">
-      <a href="/" class="text-lg font-semibold tracking-tight text-zinc-900 no-underline dark:text-zinc-100">Kalorec</a>
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <a href="/about" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">About</a>
-        <a href="/how-to-use" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">How to Use</a>
-        {session ? (
-          <>
-            <a href="/recipes/new" class="inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">+ New Recipe</a>
-            {session.repo && <a href="/shopping-list" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:text-zinc-400 dark:hover:text-zinc-100">Shopping list</a>}
-            <a href="/settings" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">{session.githubLogin}</a>
-            <form method="POST" action="/api/auth/logout">
-              <button type="submit" class="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Log out</button>
-            </form>
-          </>
-        ) : (
-          <a href="/api/auth/login" class="text-sm text-zinc-600 no-underline hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100">Log in</a>
-        )}
+  <body class="min-h-screen">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-green-900">Skip to content</a>
+    <header class="site-header print:hidden">
+      <div class="site-header__inner">
+        <a href="/" class="site-brand" aria-label="Kalorec home"><span class="site-brand__mark" aria-hidden="true">K</span>Kalorec</a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/" aria-current={path === "/" ? "page" : undefined}>{session ? "My recipes" : "Home"}</a>
+          {session?.repo && <a href="/shopping-list" aria-current={path === "/shopping-list" ? "page" : undefined}>Shopping list</a>}
+          <a href="/about" aria-current={path === "/about" ? "page" : undefined}>About</a>
+          <a href="/how-to-use" aria-current={path === "/how-to-use" ? "page" : undefined}>How to use</a>
+          {session ? (
+            <>
+              <a href="/settings" aria-current={path === "/settings" ? "page" : undefined}>Settings</a>
+              {session.repo && <a href="/recipes/new" class="nav-primary">+ New recipe</a>}
+              <form method="POST" action="/api/auth/logout"><button type="submit">Log out</button></form>
+            </>
+          ) : <a href="/api/auth/login" class="nav-primary">Log in</a>}
+        </nav>
+        <details class="mobile-menu">
+          <summary>Menu</summary>
+          <nav class="mobile-menu__panel" aria-label="Mobile">
+            <a href="/" aria-current={path === "/" ? "page" : undefined}>{session ? "My recipes" : "Home"}</a>
+            {session?.repo && <a href="/shopping-list" aria-current={path === "/shopping-list" ? "page" : undefined}>Shopping list</a>}
+            <a href="/about" aria-current={path === "/about" ? "page" : undefined}>About</a>
+            <a href="/how-to-use" aria-current={path === "/how-to-use" ? "page" : undefined}>How to use</a>
+            {session ? (
+              <>
+                <a href="/settings" aria-current={path === "/settings" ? "page" : undefined}>Settings · {session.githubLogin}</a>
+                {session.repo && <a href="/recipes/new" class="nav-primary">+ New recipe</a>}
+                <form method="POST" action="/api/auth/logout"><button type="submit">Log out</button></form>
+              </>
+            ) : <a href="/api/auth/login" class="nav-primary">Log in</a>}
+          </nav>
+        </details>
       </div>
     </header>
-    <main class="mx-auto max-w-3xl p-6 print:max-w-none print:p-0">
+    <main id="main-content" class="page-shell">
       <slot />
     </main>
   </body>

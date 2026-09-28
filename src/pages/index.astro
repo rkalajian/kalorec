@@ -34,60 +34,88 @@ if (session) {
 <Layout title={session ? "Recipes" : "Home"} session={session}>
   {session ? (
     <>
-      <h1 class="text-2xl font-semibold tracking-tight">Recipes</h1>
-
-      <div class="mt-4 flex flex-col gap-3">
-        <label for="search-input" class="text-sm font-medium">Search recipes</label>
-        <input
-          type="search"
-          id="search-input"
-          placeholder="Search recipes..."
-          class="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-        />
-        <div id="tag-filters" class="flex flex-wrap gap-1.5">
-          {allTags.map((tag) => (
-            <button
-              type="button"
-              aria-pressed="false"
-              class="tag-filter min-h-6 min-w-6 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
-              data-tag={tag}
-            >{tag}</button>
-          ))}
+      <div class="flex flex-wrap items-end justify-between gap-5">
+        <div>
+          <p class="eyebrow">Your kitchen library</p>
+          <h1 class="page-title mt-2">My recipes</h1>
+          <p class="page-intro mt-3">Everything you love to make, ready when you need it.</p>
         </div>
+        <a href="/recipes/new" class="button-primary">+ Add recipe</a>
       </div>
 
       {recipes.length === 0 ? (
-        <p class="mt-6 text-zinc-600 dark:text-zinc-400">No recipes yet. <a href="/recipes/new" class="text-green-700 dark:text-green-400">Add your first one</a>.</p>
+        <section class="surface-card mt-8 px-6 py-12 text-center sm:px-12">
+          <div class="mx-auto grid size-16 place-items-center rounded-2xl bg-[var(--sage)] text-3xl" aria-hidden="true">✦</div>
+          <h2 class="section-title mt-5">Your collection starts here</h2>
+          <p class="page-intro mx-auto mt-3">Save a family favorite, or import a recipe from a link.</p>
+          <a href="/recipes/new" class="button-primary mt-6">Add your first recipe</a>
+        </section>
       ) : (
-        <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-          {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
-        </div>
+        <>
+          <section class="surface-card mt-8 p-4 sm:p-5" aria-label="Find recipes">
+            <label for="search-input" class="block text-sm font-bold">Find a recipe</label>
+            <input type="search" id="search-input" placeholder="Search by name or tag" class="field mt-2" />
+            {allTags.length > 0 && (
+              <div id="tag-filters" class="mt-4 flex flex-wrap gap-2" aria-label="Filter by tag">
+                {allTags.map((tag) => (
+                  <button type="button" aria-pressed="false" class="tag-filter pill cursor-pointer border border-transparent hover:border-[var(--forest)] aria-pressed:bg-[#205a38] aria-pressed:text-white" data-tag={tag}>{tag}</button>
+                ))}
+              </div>
+            )}
+          </section>
+          <div class="mt-7 flex items-baseline justify-between gap-3">
+            <h2 class="section-title">The collection</h2>
+            <p id="recipe-count" class="muted text-sm" role="status" aria-live="polite">{recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}</p>
+          </div>
+          <p id="no-filter-results" hidden class="surface-card mt-5 p-6 text-center">No recipes match your search. Try another word or tag.</p>
+          <div id="recipe-grid" class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {recipes.map((recipe) => <RecipeCard recipe={recipe} />)}
+          </div>
+        </>
       )}
     </>
   ) : (
-    <div class="py-8">
-      <h1 class="text-3xl font-semibold tracking-tight">Your recipes, backed by your own GitHub repo</h1>
-      <p class="mt-4 max-w-xl text-zinc-600 dark:text-zinc-400">
-        Kalorec stores every recipe as a plain JSON file in a GitHub repo you choose — not a database you don't control. It's yours, portable, and versioned like the rest of your code.
-      </p>
-      <a href="/api/auth/login" class="mt-6 inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">Log in with GitHub</a>
-
-      <div class="mt-10 max-w-md rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
-        <label for="profile-lookup" class="block text-sm font-medium">View a shared profile</label>
-        <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Paste a profile link, or type <code>owner/repo</code>.</p>
-        <div class="mt-2 flex gap-2">
-          <input
-            type="text"
-            id="profile-lookup"
-            placeholder="owner/repo"
-            aria-describedby="profile-lookup-message"
-            class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-          />
-          <button type="button" id="profile-lookup-button" class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800">View</button>
+    <>
+      <section class="grid items-center gap-8 py-6 md:grid-cols-[1.1fr_.9fr] md:gap-12 md:py-14">
+        <div>
+          <p class="eyebrow">A home for what you cook</p>
+          <h1 class="page-title mt-3">Good recipes deserve a good home.</h1>
+          <p class="page-intro mt-5">Keep your favorites together, find them fast, and make a shopping list in a few taps. Your recipes stay in a GitHub repo you choose.</p>
+          <div class="mt-7 flex flex-wrap gap-3">
+            <a href="/api/auth/login" class="button-primary">Get started with GitHub</a>
+            <a href="/how-to-use" class="button-secondary">See how it works</a>
+          </div>
         </div>
-        <p id="profile-lookup-message" class="mt-2 min-h-5 text-sm text-red-600 dark:text-red-400" role="alert"></p>
-      </div>
-    </div>
+        <div class="surface-card relative overflow-hidden p-5 sm:p-7" aria-hidden="true">
+          <div class="absolute -right-12 -top-12 size-48 rounded-full bg-[var(--sage)]"></div>
+          <div class="relative rotate-[-3deg] rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 shadow-lg">
+            <div class="flex items-center justify-between"><span class="eyebrow">From your collection</span><span class="text-2xl">✦</span></div>
+            <p class="mt-5 font-serif text-3xl font-bold leading-tight">Sunday tomato pasta</p>
+            <p class="muted mt-2 text-sm">Simple things, worth keeping.</p>
+            <div class="mt-7 flex gap-2"><span class="pill">Dinner</span><span class="pill">Comfort food</span></div>
+          </div>
+          <div class="relative ml-8 mt-[-12px] rotate-[3deg] rounded-xl bg-[#205a38] px-5 py-4 text-white shadow-lg sm:ml-12">
+            <p class="text-xs font-bold uppercase tracking-widest text-green-100">Shopping list</p>
+            <p class="mt-1 font-serif text-xl">Everything for tonight, together.</p>
+          </div>
+        </div>
+      </section>
+      <section class="mt-10 grid gap-4 md:grid-cols-3" aria-label="What you can do">
+        <div class="surface-card p-5"><span class="eyebrow">01 / Save</span><h2 class="section-title mt-3">Keep every favorite</h2><p class="muted mt-3 leading-relaxed">Type a recipe or import one from a link. Add photos, notes, and tags.</p></div>
+        <div class="surface-card p-5"><span class="eyebrow">02 / Find</span><h2 class="section-title mt-3">Find it again</h2><p class="muted mt-3 leading-relaxed">Search your collection or browse by tag when inspiration strikes.</p></div>
+        <div class="surface-card p-5"><span class="eyebrow">03 / Make</span><h2 class="section-title mt-3">Shop with ease</h2><p class="muted mt-3 leading-relaxed">Gather ingredients from recipes into one editable shopping list.</p></div>
+      </section>
+      <section class="surface-card mt-8 p-5 sm:p-7" aria-labelledby="profile-lookup-heading">
+        <h2 id="profile-lookup-heading" class="section-title">Explore a shared collection</h2>
+        <p class="muted mt-2 text-sm">Have a profile link? Paste it below, or enter <code>owner/repo</code>.</p>
+        <label for="profile-lookup" class="mt-5 block text-sm font-bold">Profile link or owner/repo</label>
+        <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input type="text" id="profile-lookup" placeholder="owner/repo" aria-describedby="profile-lookup-message" class="field min-w-0 flex-1" />
+          <button type="button" id="profile-lookup-button" class="button-secondary">View profile</button>
+        </div>
+        <p id="profile-lookup-message" class="mt-2 min-h-5 text-sm text-red-700 dark:text-red-400" role="alert"></p>
+      </section>
+    </>
   )}
 </Layout>
 

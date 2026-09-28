@@ -2,10 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getSharingStore, loadSharingRepo, publishRecipe, saveSharingRepo, sharingSetupError, unpublishRecipe, verifySharingRepos } from "../../src/lib/publishing";
 import type { RecipeStore } from "../../src/lib/github";
 import type { Recipe } from "../../src/lib/recipe";
+import { imageName, imagePath } from "../../src/lib/images";
 
 const githubApi = vi.hoisted(() => ({
   getContent: vi.fn(async (_params: any): Promise<any> => ({})),
   createOrUpdateFileContents: vi.fn(async (_params: any): Promise<any> => ({})),
+  deleteFile: vi.fn(async (_params: any): Promise<any> => ({})),
 }));
 vi.mock("@octokit/rest", () => ({ Octokit: vi.fn(() => ({ repos: githubApi })) }));
 
@@ -21,6 +23,7 @@ const recipe: Recipe = {
 beforeEach(() => {
   githubApi.getContent.mockReset();
   githubApi.createOrUpdateFileContents.mockReset();
+  githubApi.deleteFile.mockReset();
 });
 
 function fakeStore(existing: { recipe: Recipe; sha: string } | null = null) {
@@ -29,6 +32,7 @@ function fakeStore(existing: { recipe: Recipe; sha: string } | null = null) {
     create: vi.fn(async (_recipe: Recipe) => {}),
     update: vi.fn(async (_recipe: Recipe, _sha: string) => {}),
     remove: vi.fn(async (_slug: string, _sha: string, _title: string) => {}),
+    list: vi.fn(async () => [] as Recipe[]),
   };
 }
 
@@ -72,6 +76,22 @@ describe("sharing configuration", () => {
 });
 
 describe("publication", () => {
+  it("copies private image bytes to the public repo and rewrites the public URL", async () => {
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+    const name = imageName(png);
+    githubApi.getContent.mockImplementation(async ({ path }: { path: string }) => {
+      if (path === `data/images/${name}`) return { data: { type: "file", content: png.toString("base64") } };
+      throw Object.assign(new Error("Not Found"), { status: 404 });
+    });
+    githubApi.createOrUpdateFileContents.mockResolvedValue({});
+    const store = fakeStore();
+    await publishRecipe(store as unknown as RecipeStore, { ...recipe, image: imagePath("private", sourceRepo, name) }, session);
+    expect(githubApi.createOrUpdateFileContents).toHaveBeenCalledWith(expect.objectContaining({
+      path: `data/shared-images/${name}`, repo: sharingRepo.name, content: png.toString("base64"),
+    }));
+    expect(store.create).toHaveBeenCalledWith(expect.objectContaining({ image: imagePath("public", sharingRepo, name) }));
+  });
+
   it("creates only known recipe fields in the public store", async () => {
     const store = fakeStore();
     await publishRecipe(store as unknown as RecipeStore, {
@@ -105,5 +125,18 @@ describe("publication", () => {
     const missing = fakeStore();
     await unpublishRecipe(missing as unknown as RecipeStore, "chili");
     expect(missing.remove).not.toHaveBeenCalled();
+  });
+
+  it("removes an unreferenced live public image after unpublishing", async () => {
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+    const name = imageName(png);
+    const image = imagePath("public", sharingRepo, name);
+    const store = fakeStore({ recipe: { ...recipe, image }, sha: "recipe-sha" });
+    githubApi.getContent.mockResolvedValue({ data: { type: "file", sha: "image-sha" } });
+    githubApi.deleteFile.mockResolvedValue({});
+    await unpublishRecipe(store as unknown as RecipeStore, "chili", session);
+    expect(githubApi.deleteFile).toHaveBeenCalledWith(expect.objectContaining({
+      path: `data/shared-images/${name}`, sha: "image-sha", repo: sharingRepo.name,
+    }));
   });
 });

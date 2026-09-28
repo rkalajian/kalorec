@@ -32,3 +32,28 @@ Goal: verify all source recipes in `rkalajian/privrec`, remove the redundant sou
 Acceptance: destination contains every source recipe with matching content apart from line endings; public sharing copies remain available; docs explain private shopping lists and Git history exposure; checks pass.
 
 Result: `privrec` has all 22 source recipe paths with identical content ignoring line endings, and its sharing config points to `rkalajian/recipies`. Public source recipe files removed; 20 published copies retained. Docs updated. Full suite: 222 tests passed. TypeScript check, production build, and diff checks passed.
+
+## Follow-up: local recipe images
+
+Goal: allow image uploads and download supplied image URLs into repository storage.
+
+1. Backend (executor: image backend subagent): validate image uploads and remote downloads, store bounded image files in GitHub, serve saved images, preserve public sharing, and add focused tests.
+2. Form (executor: main): add accessible local file input; send selected image with recipe save while retaining URL entry.
+3. Run tests, TypeScript check, build, and diff check.
+
+Acceptance: PNG, JPEG, WebP, and GIF uploads up to 4 MB render; HTTPS image URLs download into repository storage; private images require authorization; shared images render publicly; unsafe or oversized images fail clearly.
+
+Result: local uploads and HTTPS downloads store content addressed images in GitHub. Private image route checks the selected repo; published copies use the public repo, with unused live public files removed on unshare or replacement. Full suite: 236 tests passed. TypeScript check, production build, and diff check passed. Git history still retains previously published image bytes.
+
+## Follow-up: responsive UX/UI refresh
+
+Goal: make recipe discovery, editing, shopping, and settings clearer and more attractive on desktop and mobile while preserving behavior.
+
+1. Foundation and discovery (executor: main): establish warm culinary design tokens and responsive navigation; refresh home, recipe cards, recipe detail/profile views.
+2. Creation (executor: main): restructure recipe form into readable sections with clear image, sharing, and save controls.
+3. Secondary flows (executor: UI subagent): refresh shopping list and settings layouts, spacing, button hierarchy, and mobile stacking without changing API behavior.
+4. Validate keyboard focus, text contrast, 24px targets, mobile overflow, form labels, test suite, TypeScript, production build, and diff.
+
+Acceptance: navigation and primary actions remain obvious at narrow and wide widths; recipe cards and detail pages use consistent hierarchy; forms and list controls are usable by touch and keyboard; existing flows and checks pass.
+
+Result: responsive navigation, discovery pages, cards, shared detail view, editor, shopping list, settings, and informational pages refreshed. Saved image previews no longer expose internal paths. Manual focus, target, overflow, and color checks completed; primary text combinations exceed 4.5:1. Full suite: 236 tests passed. TypeScript check, production build, and diff check passed.

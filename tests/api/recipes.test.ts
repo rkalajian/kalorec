@@ -211,7 +211,7 @@ describe("POST /api/recipes", () => {
       locals: { session: fakeSession },
     } as any);
     expect(mockStore.create).toHaveBeenCalledWith(expect.objectContaining({ public: true }));
-    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }));
+    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }), fakeSession);
   });
 
   it("rejects sharing without a configured public repo before writing the source", async () => {
@@ -297,6 +297,20 @@ describe("PUT /api/recipes/[slug]", () => {
       request: jsonRequest("http://localhost/api/recipes/chili", "PUT", {
         title: "Chili Updated",
         expectedSha: "sha-1",
+      }),
+      locals: { session: fakeSession },
+    } as any);
+    expect(response.status).toBe(409);
+    expect(mockStore.update).not.toHaveBeenCalled();
+  });
+
+  it("does not upload an image when the recipe SHA is stale", async () => {
+    mockStore.get.mockResolvedValue({ recipe: existingRecipe, sha: "new-sha" });
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
+    const response = await PUT({
+      params: { slug: "chili" },
+      request: jsonRequest("http://localhost/api/recipes/chili", "PUT", {
+        expectedSha: "old-sha", imageUpload: `data:image/png;base64,${png.toString("base64")}`,
       }),
       locals: { session: fakeSession },
     } as any);
@@ -441,7 +455,7 @@ describe("PUT /api/recipes/[slug]", () => {
       locals: { session: fakeSession },
     } as any);
     expect(mockStore.update).toHaveBeenCalledWith(expect.objectContaining({ public: true }), "sha-1");
-    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }));
+    expect(mockPublishRecipe).toHaveBeenCalledWith(mockSharingStore, expect.objectContaining({ public: true }), fakeSession);
   });
 
   it("removes a public copy before saving an unshared source", async () => {

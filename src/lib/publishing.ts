@@ -4,6 +4,7 @@ import { normalizeNutrition, normalizeStringList, normalizeTags, normalizeText, 
 import type { Recipe } from "./recipe";
 import type { RepoRef } from "./session";
 import { resolveRepoSelection, type RepoClient } from "./repos";
+import { parseImagePath, readRepoImage, saveRepoImage } from "./images";
 
 export interface SharingSession {
   accessToken: string;
@@ -141,14 +142,47 @@ function publishedCopy(recipe: Recipe): Recipe {
   };
 }
 
-export async function publishRecipe(store: RecipeStore, recipe: Recipe): Promise<void> {
+export async function publishRecipe(store: RecipeStore, recipe: Recipe, session?: SharingSession): Promise<void> {
   const copy = publishedCopy(recipe);
+  const local = copy.image ? parseImagePath(copy.image) : null;
+  if (local) {
+    if (!session?.repo || !session.sharingRepo || local.scope !== "private" ||
+        local.owner !== session.repo.owner || local.repo !== session.repo.name) {
+      throw new Error("Cannot publish an image outside the source repo");
+    }
+    const bytes = await readRepoImage(session.accessToken, session.repo, "private", local.name);
+    if (!bytes) throw new Error("Source image was not found");
+    copy.image = await saveRepoImage(session.accessToken, session.sharingRepo, "public", bytes);
+  }
   const existing = await store.get(copy.slug);
   if (existing) await store.update(copy, existing.sha);
   else await store.create(copy);
+  if (session && existing?.recipe.image && existing.recipe.image !== copy.image) {
+    await removeUnusedPublishedImage(store, session, existing.recipe.image);
+  }
 }
 
-export async function unpublishRecipe(store: RecipeStore, slug: string): Promise<void> {
+async function removeUnusedPublishedImage(store: RecipeStore, session: SharingSession, url: string): Promise<void> {
+  const path = parseImagePath(url);
+  const repo = session.sharingRepo;
+  if (!repo || !path || path.scope !== "public" || path.owner !== repo.owner || path.repo !== repo.name) return;
+  try {
+    if ((await store.list()).some((recipe) => recipe.image === url)) return;
+    const client = new Octokit({ auth: session.accessToken });
+    const filePath = `data/shared-images/${path.name}`;
+    const response = await client.repos.getContent({ owner: repo.owner, repo: repo.name, path: filePath, ref: repo.branch });
+    if (Array.isArray(response.data) || response.data.type !== "file") return;
+    await client.repos.deleteFile({ owner: repo.owner, repo: repo.name, branch: repo.branch,
+      path: filePath, sha: response.data.sha, message: `Remove unused recipe image: ${path.name}` });
+  } catch {
+    // The published recipe is already gone; stale Git assets can be retried during maintenance.
+  }
+}
+
+export async function unpublishRecipe(store: RecipeStore, slug: string, session?: SharingSession): Promise<void> {
   const existing = await store.get(slug);
-  if (existing) await store.remove(slug, existing.sha, existing.recipe.title);
+  if (existing) {
+    await store.remove(slug, existing.sha, existing.recipe.title);
+    if (session && existing.recipe.image) await removeUnusedPublishedImage(store, session, existing.recipe.image);
+  }
 }

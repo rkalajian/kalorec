@@ -16,11 +16,12 @@ const message = error ? errorMessages[error] ?? "Something went wrong. Please tr
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kalorec</title>
   </head>
-  <body class="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100 flex items-center justify-center">
-    <div class="text-center">
-      <h1 class="text-2xl font-semibold tracking-tight">Kalorec</h1>
-      {message && <p class="mt-4 text-red-600 dark:text-red-400">{message}</p>}
-      <a href="/api/auth/login" class="mt-6 inline-block rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white no-underline hover:bg-green-800 dark:bg-green-700 dark:hover:bg-green-800">Log in with GitHub</a>
-    </div>
+  <body class="flex min-h-screen items-center justify-center p-4">
+    <main class="surface-card w-full max-w-md p-8 text-center sm:p-10">
+      <div class="site-brand justify-center"><span class="site-brand__mark" aria-hidden="true">K</span>Kalorec</div>
+      <h1 class="section-title mt-6">Welcome back to your kitchen</h1>
+      {message && <p class="mt-4 text-red-700 dark:text-red-300" role="alert">{message}</p>}
+      <a href="/api/auth/login" class="button-primary mt-6">Log in with GitHub</a>
+    </main>
   </body>
 </html>

@@ -2,12 +2,15 @@
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="How to Use">
-  <h1 class="text-2xl font-semibold tracking-tight">How to use Kalorec</h1>
-  <ol class="mt-4 list-decimal space-y-3 pl-5 text-zinc-700 dark:text-zinc-300">
+  <p class="eyebrow">From first recipe to dinner</p>
+  <h1 class="page-title mt-2">How to use Kalorec</h1>
+  <p class="page-intro mt-4">A few steps to build your collection and make it useful every day.</p>
+  <ol class="mt-8 grid list-decimal gap-3 pl-6 leading-relaxed marker:font-bold marker:text-[var(--forest)] sm:grid-cols-2">
     <li>Log in with GitHub.</li>
     <li>Pick a private source repo in Settings — that's where your recipes will live.</li>
     <li>Pick a different public sharing repo in Settings. Kalorec puts published copies there, and your profile link uses that repo.</li>
     <li>Add a recipe: type it in by hand, or paste a link to import it automatically.</li>
+    <li>Add an image by choosing a PNG, JPEG, WebP, or GIF file (up to 4 MB), or enter an HTTPS image URL. Kalorec saves the image in your recipe repo. Published recipes also get a copy in your public sharing repo.</li>
     <li>Open Shopping list, choose recipes, and add their ingredient lines. Quantities stay as written. Edit, check, add, or remove items, then save the list to your private repo. You can also copy or print it.</li>
     <li>Reload replaces the list in your browser with the saved version; it warns if you have unsaved edits. If another browser or GitHub changes the saved list first, saving is rejected so you can reload and avoid overwriting those changes.</li>
     <li>Check "Publish a copy on my public Kalorec profile" for recipes you want visitors to see, then copy your share link from Settings.</li>
@@ -15,3 +18,7 @@ import Layout from "../layouts/Layout.astro";
     <li>Browse a shared profile and click "Add to my recipes" to copy someone else's public recipe into your own repo.</li>
   </ol>
 </Layout>
+
+<style>
+  ol li { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 16px 18px; }
+</style>

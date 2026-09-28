@@ -26,6 +26,9 @@ if (!stored) {
 }
 ---
 <Layout title={`Edit ${stored.recipe.title}`}>
-  <h1 class="text-2xl font-semibold tracking-tight">Edit {stored.recipe.title}</h1>
+  <a href={`/recipes/${stored.recipe.slug}`} class="text-link text-sm">← Back to recipe</a>
+  <p class="eyebrow mt-6">Make it yours</p>
+  <h1 class="page-title mt-2">Edit {stored.recipe.title}</h1>
+  <p class="page-intro mt-3">Update the details, then save your changes.</p>
   <RecipeForm mode="edit" recipe={stored.recipe} sha={stored.sha} />
 </Layout>

@@ -3,6 +3,7 @@ import { getStore } from "../../../lib/store";
 import { normalizeText, normalizeRecipeUrl, safeRecipeUrl, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 import { SESSION_COOKIE } from "../../../lib/session";
 import { getSharingStore, publishRecipe, sharingSetupError, SharingConfigurationError, unpublishRecipe, verifySharingRepos } from "../../../lib/publishing";
+import { ImageInputError, resolveRecipeImage } from "../../../lib/images";
 
 export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
   const slug = params.slug!;
@@ -18,11 +19,14 @@ export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
   if (body.public !== undefined && typeof body.public !== "boolean") {
     return new Response(JSON.stringify({ error: "Sharing must be true or false" }), { status: 400 });
   }
+  if (body.imageUpload !== undefined && typeof body.imageUpload !== "string") {
+    return new Response(JSON.stringify({ error: "Invalid image upload" }), { status: 400 });
+  }
   let sourceUrl: string | undefined;
   let image: string | undefined;
   try {
     if (body.sourceUrl !== undefined) sourceUrl = normalizeRecipeUrl(body.sourceUrl, "sourceUrl");
-    if (body.image !== undefined) image = normalizeRecipeUrl(body.image, "image");
+    if (body.image !== undefined && !body.imageUpload) image = normalizeRecipeUrl(body.image, "image");
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), { status: 400 });
   }
@@ -56,6 +60,14 @@ export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
       JSON.stringify({ error: "Recipe changed elsewhere, reload and try again" }),
       { status: 409 }
     );
+  }
+  if (body.image !== undefined || body.imageUpload !== undefined) {
+    try {
+      image = await resolveRecipeImage(image, body.imageUpload, locals.session.accessToken, locals.session.repo!);
+    } catch (err) {
+      return new Response(JSON.stringify({ error: err instanceof ImageInputError ? err.message : "Could not save image" }),
+        { status: err instanceof ImageInputError ? 400 : 502 });
+    }
   }
 
   const updated = {
@@ -98,7 +110,7 @@ export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
   let removedPublicCopy = false;
   if (!updated.public && locals.session.sharingRepo) {
     try {
-      await unpublishRecipe(getSharingStore(locals.session), slug);
+      await unpublishRecipe(getSharingStore(locals.session), slug, locals.session);
       removedPublicCopy = true;
     } catch {
       return new Response(JSON.stringify({
@@ -127,7 +139,7 @@ export const PUT: APIRoute = async ({ params, request, locals, cookies }) => {
 
   if (updated.public) {
     try {
-      await publishRecipe(getSharingStore(locals.session), updated);
+      await publishRecipe(getSharingStore(locals.session), updated, locals.session);
     } catch {
       return new Response(JSON.stringify({
         slug,
@@ -173,7 +185,7 @@ export const DELETE: APIRoute = async ({ params, locals, cookies }) => {
   let removedPublicCopy = false;
   if (locals.session.sharingRepo) {
     try {
-      await unpublishRecipe(getSharingStore(locals.session), slug);
+      await unpublishRecipe(getSharingStore(locals.session), slug, locals.session);
       removedPublicCopy = true;
     } catch {
       return new Response(JSON.stringify({

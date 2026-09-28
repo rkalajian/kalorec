@@ -62,24 +62,24 @@ function render() {
 
   for (const [index, item] of items.entries()) {
     const row = document.createElement("li");
-    row.className = "rounded-md border border-zinc-200 p-3 dark:border-zinc-700 print:border-0 print:p-1";
+    row.className = "rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-3 sm:p-4 print:rounded-none print:border-0 print:bg-white print:p-1";
 
     const controls = document.createElement("div");
-    controls.className = "flex flex-wrap items-center gap-2 print:hidden";
+    controls.className = "grid grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-2 sm:grid-cols-[2.75rem_minmax(0,1fr)_auto] print:hidden";
 
     const checkLabel = document.createElement("label");
-    checkLabel.className = "flex min-h-10 min-w-10 cursor-pointer items-center justify-center";
+    checkLabel.className = "flex size-11 cursor-pointer items-center justify-center";
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = item.checked;
-    checkbox.className = "size-5 accent-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700";
+    checkbox.className = "size-5 accent-[#27523a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#27523a]";
     const checkText = document.createElement("span");
     checkText.className = "sr-only";
     checkText.textContent = `Mark item ${index + 1}, ${item.text || "empty item"}, purchased`;
     checkLabel.append(checkbox, checkText);
 
     const textLabel = document.createElement("label");
-    textLabel.className = "min-w-40 flex-1";
+    textLabel.className = "min-w-0";
     const textLabelText = document.createElement("span");
     textLabelText.className = "sr-only";
     textLabelText.textContent = `Item ${index + 1} text`;
@@ -88,12 +88,12 @@ function render() {
     textInput.maxLength = MAX_TEXT;
     textInput.value = item.text;
     textInput.setAttribute("aria-describedby", "item-limit-hint");
-    textInput.className = "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
+    textInput.className = "field min-h-11 w-full";
     textLabel.append(textLabelText, textInput);
 
     const removeButton = document.createElement("button");
     removeButton.type = "button";
-    removeButton.className = "min-h-10 rounded-md border border-zinc-300 px-3 py-2 text-sm hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:border-zinc-700 dark:hover:bg-zinc-800";
+    removeButton.className = "button-secondary col-span-2 min-h-11 justify-self-end text-sm sm:col-span-1";
     removeButton.textContent = "Remove";
     removeButton.setAttribute("aria-label", `Remove item ${index + 1}, ${item.text || "empty item"}`);
     controls.append(checkLabel, textLabel, removeButton);
@@ -132,7 +132,7 @@ function render() {
     row.append(controls, printText);
     if (item.source) {
       const source = document.createElement("p");
-      source.className = "mt-1 break-words pl-12 text-xs text-zinc-600 dark:text-zinc-400 print:mt-0 print:pl-6 print:text-zinc-700";
+      source.className = "mt-1 break-words pl-[3.25rem] text-xs text-[var(--muted)] print:mt-0 print:pl-6 print:text-zinc-700";
       source.textContent = `From ${item.source}`;
       row.append(source);
     }

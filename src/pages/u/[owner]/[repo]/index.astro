@@ -19,22 +19,29 @@ const allTags = Array.from(new Set(recipes.flatMap((r) => r.tags))).sort();
 const copyAction = resolveCopyAction(Astro.locals.session);
 ---
 <Layout title={`${owner}'s recipes`} session={Astro.locals.session}>
-  <h1 class="text-2xl font-semibold tracking-tight">{owner}'s recipes</h1>
+  <div class="flex flex-wrap items-end justify-between gap-5">
+    <div>
+      <p class="eyebrow">Shared collection</p>
+      <h1 class="page-title mt-2">{owner}'s recipes</h1>
+      <p class="page-intro mt-3">Recipes they chose to share with you.</p>
+    </div>
+    <a href="/" class="button-secondary">Explore Kalorec</a>
+  </div>
 
-  <div class="mt-4 flex flex-col gap-3">
-    <label for="search-input" class="text-sm font-medium">Search recipes</label>
+  <div class="surface-card mt-8 p-4 sm:p-5">
+    <label for="search-input" class="block text-sm font-bold">Find a recipe</label>
     <input
       type="search"
       id="search-input"
-      placeholder="Search recipes..."
-      class="rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+      placeholder="Search by name or tag"
+      class="field mt-2"
     />
-    <div id="tag-filters" class="flex flex-wrap gap-1.5">
+    <div id="tag-filters" class="mt-4 flex flex-wrap gap-2" aria-label="Filter by tag">
       {allTags.map((tag) => (
         <button
           type="button"
           aria-pressed="false"
-          class="tag-filter min-h-6 min-w-6 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 aria-pressed:bg-green-700 aria-pressed:text-white dark:aria-pressed:bg-green-700"
+          class="tag-filter pill cursor-pointer border border-transparent hover:border-[var(--forest)] aria-pressed:bg-[#205a38] aria-pressed:text-white"
           data-tag={tag}
         >{tag}</button>
       ))}
@@ -42,13 +49,17 @@ const copyAction = resolveCopyAction(Astro.locals.session);
   </div>
 
   {recipes.length === 0 ? (
-    <p class="mt-6 text-zinc-600 dark:text-zinc-400">No public recipes yet.</p>
+    <p class="surface-card mt-8 p-8 text-center muted">No public recipes yet.</p>
   ) : (
-    <div id="recipe-grid" class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
-      {recipes.map((recipe) => (
-        <RecipeCard recipe={recipe} href={`/u/${owner}/${repo}/${recipe.slug}`} copyAction={copyAction} sourceOwner={owner} sourceRepo={repo} />
-      ))}
-    </div>
+    <>
+      <div class="mt-7 flex items-baseline justify-between gap-3"><h2 class="section-title">The collection</h2><p id="recipe-count" class="muted text-sm" role="status" aria-live="polite">{recipes.length} {recipes.length === 1 ? "recipe" : "recipes"}</p></div>
+      <p id="no-filter-results" hidden class="surface-card mt-5 p-6 text-center">No recipes match your search. Try another word or tag.</p>
+      <div id="recipe-grid" class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {recipes.map((recipe) => (
+          <RecipeCard recipe={recipe} href={`/u/${owner}/${repo}/${recipe.slug}`} copyAction={copyAction} sourceOwner={owner} sourceRepo={repo} />
+        ))}
+      </div>
+    </>
   )}
 </Layout>
 

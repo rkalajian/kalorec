@@ -4,6 +4,7 @@ import { slugify, dedupeSlug, type Recipe } from "../../../lib/recipe";
 import { normalizeText, normalizeRecipeUrl, normalizeNutrition, normalizeTags, normalizeStringList } from "../../../lib/normalize";
 import { SESSION_COOKIE } from "../../../lib/session";
 import { getSharingStore, publishRecipe, sharingSetupError, SharingConfigurationError, verifySharingRepos } from "../../../lib/publishing";
+import { ImageInputError, resolveRecipeImage } from "../../../lib/images";
 
 export const POST: APIRoute = async ({ request, locals, cookies }) => {
   let body: any;
@@ -18,6 +19,9 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   }
   if (body.public !== undefined && typeof body.public !== "boolean") {
     return new Response(JSON.stringify({ error: "Sharing must be true or false" }), { status: 400 });
+  }
+  if (body.imageUpload !== undefined && typeof body.imageUpload !== "string") {
+    return new Response(JSON.stringify({ error: "Invalid image upload" }), { status: 400 });
   }
   if (body.public === true) {
     const error = sharingSetupError(locals.session);
@@ -35,7 +39,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
   let image: string | undefined;
   try {
     sourceUrl = normalizeRecipeUrl(body.sourceUrl, "sourceUrl");
-    image = normalizeRecipeUrl(body.image, "image");
+    if (!body.imageUpload) image = normalizeRecipeUrl(body.image, "image");
   } catch (err) {
     return new Response(JSON.stringify({ error: (err as Error).message }), { status: 400 });
   }
@@ -60,6 +64,12 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   const slug = dedupeSlug(slugify(body.title), existing.map((r) => r.slug));
   const now = new Date().toISOString();
+  try {
+    image = await resolveRecipeImage(image, body.imageUpload, locals.session.accessToken, locals.session.repo!);
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err instanceof ImageInputError ? err.message : "Could not save image" }),
+      { status: err instanceof ImageInputError ? 400 : 502 });
+  }
 
   const recipe: Recipe = {
     slug,
@@ -97,7 +107,7 @@ export const POST: APIRoute = async ({ request, locals, cookies }) => {
 
   if (recipe.public) {
     try {
-      await publishRecipe(getSharingStore(locals.session), recipe);
+      await publishRecipe(getSharingStore(locals.session), recipe, locals.session);
     } catch {
       return new Response(JSON.stringify({
         slug,

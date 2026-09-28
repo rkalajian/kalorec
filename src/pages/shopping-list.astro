@@ -21,66 +21,75 @@ Astro.response.headers.set("Cache-Control", "private, no-store");
 ---
 
 <Layout title="Shopping List">
-  <h1 class="text-2xl font-semibold tracking-tight">Shopping list</h1>
-  <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400 print:hidden">
-    Add ingredients from your recipes, then edit the list for your trip. Quantities stay exactly as written. Your saved list lives in your private recipe repo.
-  </p>
+  <div class="space-y-7 pb-12 print:space-y-4 print:pb-0">
+    <header>
+      <p class="eyebrow print:hidden">Plan your shop</p>
+      <h1 class="page-title mt-2">Shopping list</h1>
+      <p class="page-intro mt-3 print:hidden">Gather ingredients from your recipes, then add anything else you need. Your list saves to your private recipe repo.</p>
+    </header>
 
-  <section aria-labelledby="choose-recipes-heading" class="mt-6 rounded-md border border-zinc-200 p-4 dark:border-zinc-700 print:hidden">
-    <h2 id="choose-recipes-heading" class="text-lg font-semibold">Add from recipes</h2>
-    {recipes.length === 0 ? (
-      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">No recipes yet. <a href="/recipes/new" class="text-green-700 underline dark:text-green-400">Add one first</a>.</p>
-    ) : (
-      <>
-        <fieldset class="mt-3">
-          <legend class="sr-only">Choose recipes</legend>
-          <div class="max-h-64 space-y-1 overflow-y-auto rounded-md border border-zinc-200 p-2 dark:border-zinc-700">
-            {recipes.map((recipe) => (
-              <label class="flex min-h-10 cursor-pointer items-center gap-3 rounded-md px-2 py-1 hover:bg-zinc-100 dark:hover:bg-zinc-800">
-                <input
-                  type="checkbox"
-                  class="recipe-choice size-5 shrink-0 accent-green-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700"
-                  data-title={recipe.title}
-                  data-ingredients={JSON.stringify(Array.isArray(recipe.ingredients) ? recipe.ingredients : [])}
-                />
-                <span>{recipe.title}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <button id="add-selected" type="button" disabled class="mt-3 min-h-10 rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60">
-          Add selected ingredients
-        </button>
-        <p id="selection-message" class="mt-2 text-sm text-zinc-600 dark:text-zinc-400" role="status" aria-live="polite"></p>
-      </>
-    )}
-  </section>
-
-  <section aria-labelledby="list-heading" class="mt-6">
-    <h2 id="list-heading" class="text-lg font-semibold">Items</h2>
-    <p id="list-status" class="mt-2 text-sm text-zinc-600 dark:text-zinc-400 print:hidden" role="status" aria-live="polite">Loading saved list…</p>
-    <p id="list-error" class="mt-2 text-sm text-red-700 dark:text-red-400 print:hidden" role="alert"></p>
-    <p id="list-empty" hidden class="mt-4 text-zinc-600 dark:text-zinc-400">No items yet.</p>
-    <ul id="shopping-items" class="mt-4 space-y-2"></ul>
-
-    <form id="add-item-form" class="mt-5 print:hidden">
-      <label for="new-item" class="block text-sm font-medium">Add another item</label>
-      <p id="item-limit-hint" class="mt-1 text-xs text-zinc-600 dark:text-zinc-400">Maximum 1,000 characters per item.</p>
-      <div class="mt-2 flex flex-wrap gap-2">
-        <input id="new-item" type="text" maxlength="1000" aria-describedby="item-limit-hint" disabled class="min-w-0 flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100" />
-        <button id="add-item" type="submit" disabled class="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-800">Add item</button>
+    <section aria-labelledby="choose-recipes-heading" class="surface-card p-5 sm:p-7 print:hidden">
+      <div class="flex items-start gap-4">
+        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">1</span>
+        <div>
+          <h2 id="choose-recipes-heading" class="section-title">Add from recipes</h2>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Choose recipes to bring their ingredients into your list. Quantities stay as written.</p>
+        </div>
       </div>
-    </form>
+      {recipes.length === 0 ? (
+        <p class="mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm text-[var(--muted)]">No recipes yet. <a href="/recipes/new" class="font-semibold text-[var(--forest)] underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2">Add your first recipe</a>.</p>
+      ) : (
+        <>
+          <fieldset class="mt-5">
+            <legend class="sr-only">Choose recipes</legend>
+            <div class="grid max-h-72 gap-2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--sage)] p-2 sm:grid-cols-2">
+              {recipes.map((recipe) => (
+                <label class="flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-transparent bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink)] transition-colors hover:border-[var(--forest)] focus-within:border-[var(--forest)]">
+                  <input type="checkbox" class="recipe-choice size-5 shrink-0 accent-[#27523a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#27523a]" data-title={recipe.title} data-ingredients={JSON.stringify(Array.isArray(recipe.ingredients) ? recipe.ingredients : [])} />
+                  <span class="min-w-0 break-words">{recipe.title}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <button id="add-selected" type="button" disabled class="button-primary mt-4 min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">Add selected ingredients</button>
+          <p id="selection-message" class="mt-2 min-h-5 text-sm text-[var(--muted)]" role="status" aria-live="polite"></p>
+        </>
+      )}
+    </section>
 
-    <div class="mt-5 flex flex-wrap gap-2 print:hidden">
-      <button id="save-list" type="button" disabled class="min-h-10 rounded-md bg-green-700 px-4 py-2 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60">Save list</button>
-      <button id="reload-list" type="button" class="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 aria-disabled:cursor-not-allowed aria-disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-800">Reload</button>
-      <button id="copy-list" type="button" disabled class="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-800">Copy</button>
-      <button id="print-list" type="button" disabled class="min-h-10 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:hover:bg-zinc-800">Print</button>
-    </div>
-    <p class="mt-3 text-xs text-zinc-600 dark:text-zinc-400 print:hidden">Save after editing. Each save creates a commit in your private repo, so older list contents remain in its Git history. Keep that repo private.</p>
-    <noscript><p class="mt-3 text-red-700 dark:text-red-400">Enable JavaScript to edit your shopping list.</p></noscript>
-  </section>
+    <section aria-labelledby="list-heading" class="surface-card p-5 sm:p-7 print:border-0 print:bg-white print:p-0 print:shadow-none">
+      <div class="flex items-start gap-4 print:hidden">
+        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">2</span>
+        <div>
+          <h2 id="list-heading" class="section-title">Your items</h2>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Check items off as you shop. Save changes before leaving.</p>
+        </div>
+      </div>
+      <h2 class="hidden font-serif text-2xl print:block">Items</h2>
+      <p id="list-status" class="mt-4 text-sm text-[var(--muted)] print:hidden" role="status" aria-live="polite">Loading saved list…</p>
+      <p id="list-error" class="mt-2 text-sm text-[#813b2d] dark:text-red-300 print:hidden" role="alert"></p>
+      <p id="list-empty" hidden class="mt-4 rounded-2xl bg-[var(--sage)] p-5 text-sm text-[var(--muted)]">No items yet. Add from a recipe above or enter an item below.</p>
+      <ul id="shopping-items" class="mt-4 space-y-2 print:space-y-0"></ul>
+
+      <form id="add-item-form" class="mt-6 border-t border-[var(--line)] pt-5 print:hidden">
+        <label for="new-item" class="block text-sm font-semibold">Add another item</label>
+        <p id="item-limit-hint" class="mt-1 text-xs text-[var(--muted)]">Maximum 1,000 characters per item.</p>
+        <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input id="new-item" type="text" maxlength="1000" aria-describedby="item-limit-hint" disabled class="field min-h-11 min-w-0 flex-1 disabled:opacity-60" />
+          <button id="add-item" type="submit" disabled class="button-secondary min-h-11 disabled:cursor-not-allowed disabled:opacity-60">Add item</button>
+        </div>
+      </form>
+
+      <div class="mt-6 flex flex-col gap-2 border-t border-[var(--line)] pt-5 sm:flex-row sm:flex-wrap print:hidden">
+        <button id="save-list" type="button" disabled class="button-primary min-h-11 disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60">Save list</button>
+        <button id="reload-list" type="button" class="button-secondary min-h-11 aria-disabled:cursor-not-allowed aria-disabled:opacity-60">Reload</button>
+        <button id="copy-list" type="button" disabled class="button-secondary min-h-11 disabled:cursor-not-allowed disabled:opacity-60">Copy</button>
+        <button id="print-list" type="button" disabled class="button-secondary min-h-11 disabled:cursor-not-allowed disabled:opacity-60">Print</button>
+      </div>
+      <p class="mt-4 text-xs leading-relaxed text-[var(--muted)] print:hidden">Each save creates a commit in your private repo. Older list contents remain in Git history.</p>
+      <noscript><p class="mt-3 text-[#813b2d] dark:text-red-300">Enable JavaScript to edit your shopping list.</p></noscript>
+    </section>
+  </div>
 </Layout>
 
 <script src="../scripts/shopping-list.ts"></script>

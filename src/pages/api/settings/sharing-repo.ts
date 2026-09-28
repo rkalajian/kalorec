@@ -93,10 +93,14 @@ export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => 
     const published = await sharingStore.list();
     const selectedSlugs = new Set(sourceRecipes.filter((recipe) => recipe.public === true).map((recipe) => recipe.slug));
     for (const recipe of published) {
-      if (!selectedSlugs.has(recipe.slug)) await unpublishRecipe(sharingStore, recipe.slug);
+      if (!selectedSlugs.has(recipe.slug)) {
+        await unpublishRecipe(sharingStore, recipe.slug, session);
+      }
     }
     for (const recipe of sourceRecipes) {
-      if (recipe.public === true) await publishRecipe(sharingStore, recipe);
+      if (recipe.public === true) {
+        await publishRecipe(sharingStore, recipe, session);
+      }
     }
   } catch {
     return redirect("/settings?error=migration_failed");

@@ -30,14 +30,14 @@ const initial: FormData_ = JSON.parse(dataScript.textContent || "{}");
 const ingredientsList = document.getElementById("ingredients-list")!;
 const instructionsList = document.getElementById("instructions-list")!;
 
-const rowInputClass = "flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100";
-const removeButtonClass = "rounded-md border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800";
+const rowInputClass = "field min-w-0 flex-1 text-sm";
+const removeButtonClass = "button-secondary shrink-0";
 let ingredientRowId = 0;
 let instructionRowId = 0;
 
 function addRow(container: HTMLElement, kind: "ingredient" | "instruction", value = "") {
   const row = document.createElement("div");
-  row.className = "mt-2 flex gap-2";
+  row.className = "mt-3 flex items-center gap-2";
   const number = kind === "ingredient" ? ++ingredientRowId : ++instructionRowId;
   const name = kind === "ingredient" ? "Ingredient" : "Step";
   const input = document.createElement("input");
@@ -74,7 +74,10 @@ function fillForm(data: FormData_) {
   fillField("servings", data.servings);
   fillField("prepTime", data.prepTime);
   fillField("cookTime", data.cookTime);
-  fillField("image", data.image);
+  existingImage = data.image.startsWith("/api/images/") ? data.image : "";
+  fillField("image", existingImage ? "" : data.image);
+  (document.getElementById("image-upload") as HTMLInputElement).value = "";
+  setImagePreview(data.image);
   fillField("sourceUrl", data.sourceUrl);
   fillField("notes", data.notes);
   fillField("nutrition-calories", data.nutrition.calories);
@@ -88,6 +91,62 @@ function fillForm(data: FormData_) {
   initial.ingredients = data.ingredients;
   initial.instructions = data.instructions;
   renderRows();
+}
+
+const imagePreview = document.getElementById("image-preview") as HTMLImageElement;
+const imagePreviewWrap = document.getElementById("image-preview-wrap") as HTMLDivElement;
+const removeImageButton = document.getElementById("remove-image") as HTMLButtonElement;
+let existingImage = "";
+let previewObjectUrl: string | undefined;
+
+function setImagePreview(url: string) {
+  if (previewObjectUrl) {
+    URL.revokeObjectURL(previewObjectUrl);
+    previewObjectUrl = undefined;
+  }
+  const valid = url.startsWith("/api/images/") || url.startsWith("https://");
+  imagePreviewWrap.hidden = !valid;
+  removeImageButton.hidden = !valid;
+  if (valid) imagePreview.src = url;
+  else imagePreview.removeAttribute("src");
+}
+
+document.getElementById("image-upload")!.addEventListener("change", () => {
+  const file = (document.getElementById("image-upload") as HTMLInputElement).files?.[0];
+  if (!file) {
+    setImagePreview((document.getElementById("image") as HTMLInputElement).value.trim());
+    return;
+  }
+  setImagePreview("");
+  previewObjectUrl = URL.createObjectURL(file);
+  imagePreview.src = previewObjectUrl;
+  imagePreviewWrap.hidden = false;
+  removeImageButton.hidden = false;
+});
+document.getElementById("image")!.addEventListener("change", () => {
+  if (!(document.getElementById("image-upload") as HTMLInputElement).files?.length) {
+    setImagePreview((document.getElementById("image") as HTMLInputElement).value.trim());
+  }
+});
+removeImageButton.addEventListener("click", () => {
+  existingImage = "";
+  (document.getElementById("image-upload") as HTMLInputElement).value = "";
+  (document.getElementById("image") as HTMLInputElement).value = "";
+  setImagePreview("");
+});
+
+const acceptedImageTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+const maxImageBytes = 4 * 1024 * 1024;
+
+function readImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string"
+      ? resolve(reader.result)
+      : reject(new Error("Could not read image file"));
+    reader.onerror = () => reject(new Error("Could not read image file"));
+    reader.readAsDataURL(file);
+  });
 }
 
 fillForm(initial);
@@ -113,6 +172,7 @@ function showMessage(id: string, text: string, kind: MessageKind = "info") {
   el.textContent = text;
   el.classList.remove(...messageKindClasses.warning, ...messageKindClasses.error);
   if (kind !== "info") el.classList.add(...messageKindClasses[kind]);
+  if (id === "form-message" && kind === "error") el.scrollIntoView({ block: "center" });
 }
 
 const importButton = document.getElementById("import-button");
@@ -121,6 +181,7 @@ if (importButton) {
     const urlInput = document.getElementById("import-url") as HTMLInputElement;
     const url = urlInput.value.trim();
     if (!url) return;
+    (importButton as HTMLButtonElement).disabled = true;
     showMessage("import-message", "Importing…", "info");
     try {
       const res = await fetch("/api/import", {
@@ -151,6 +212,8 @@ if (importButton) {
       );
     } catch (err) {
       showMessage("import-message", err instanceof Error ? err.message : "Import failed", "error");
+    } finally {
+      (importButton as HTMLButtonElement).disabled = false;
     }
   });
 }
@@ -172,13 +235,31 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
+  const imageFile = (document.getElementById("image-upload") as HTMLInputElement).files?.[0];
+  if (imageFile && (!acceptedImageTypes.has(imageFile.type) || imageFile.size > maxImageBytes || imageFile.size === 0)) {
+    showMessage("form-message", "Choose a PNG, JPEG, WebP, or GIF image up to 4 MB.", "error");
+    return;
+  }
+
+  let imageUpload: string | undefined;
+  if (imageFile) {
+    showMessage("form-message", "Reading image…");
+    try {
+      imageUpload = await readImage(imageFile);
+    } catch (err) {
+      showMessage("form-message", err instanceof Error ? err.message : "Could not read image file", "error");
+      return;
+    }
+  }
+
   const payload = {
     title,
     tags: (document.getElementById("tags") as HTMLInputElement).value.split(",").map((t) => t.trim()).filter(Boolean),
     servings: (document.getElementById("servings") as HTMLInputElement).value.trim(),
     prepTime: (document.getElementById("prepTime") as HTMLInputElement).value.trim(),
     cookTime: (document.getElementById("cookTime") as HTMLInputElement).value.trim(),
-    image: (document.getElementById("image") as HTMLInputElement).value.trim(),
+    image: (document.getElementById("image") as HTMLInputElement).value.trim() || existingImage,
+    imageUpload,
     sourceUrl: (document.getElementById("sourceUrl") as HTMLInputElement).value.trim(),
     notes: (document.getElementById("notes") as HTMLTextAreaElement).value.trim(),
     ingredients: collectRows(ingredientsList, "ingredient"),
@@ -198,6 +279,9 @@ form.addEventListener("submit", async (event) => {
 
   const url = mode === "create" ? "/api/recipes" : `/api/recipes/${slug}`;
   const method = mode === "create" ? "POST" : "PUT";
+  const saveButton = document.getElementById("save-button") as HTMLButtonElement;
+  saveButton.disabled = true;
+  saveButton.textContent = "Saving…";
 
   try {
     const res = await fetch(url, {
@@ -210,6 +294,9 @@ form.addEventListener("submit", async (event) => {
     window.location.href = `/recipes/${encodeURIComponent(json.slug)}${json.warning ? "?sharing=failed" : ""}`;
   } catch (err) {
     showMessage("form-message", err instanceof Error ? err.message : "Save failed", "error");
+  } finally {
+    saveButton.disabled = false;
+    saveButton.textContent = "Save recipe";
   }
 });
 

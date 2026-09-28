@@ -26,6 +26,11 @@ export function normalizeRecipeUrl(value: unknown, field: RecipeUrlField): strin
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   if (trimmed.length > 2048) throw new Error(`${field} is too long`);
+  if (field === "image" && /^\/api\/images\//.test(trimmed)) {
+    if (/^\/api\/images\/(?:private|public)\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/[a-f0-9]{64}\.(?:png|jpg|webp|gif)$/.test(trimmed) &&
+        !trimmed.includes("..")) return trimmed;
+    throw new Error("image must be a valid local image path");
+  }
 
   let parsed: URL;
   try {

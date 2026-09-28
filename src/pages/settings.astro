@@ -6,7 +6,6 @@ import { SESSION_COOKIE } from "../lib/session";
 
 const { session } = Astro.locals;
 const octokit = new Octokit({ auth: session.accessToken });
-
 let repos;
 try {
   repos = await listSelectableRepos(octokit as any);
@@ -17,126 +16,123 @@ try {
   }
   throw err;
 }
-const error = Astro.url.searchParams.get("error");
+const errorMessages: Record<string, string> = {
+  no_access: "You no longer have push access to that repo. Pick a different one below.",
+  source_must_be_private: "Choose a private repo for recipe storage.",
+  sharing_must_be_public: "Choose a public repo for shared recipes.",
+  sharing_must_differ: "Choose a different repo for shared recipes.",
+  source_has_shared_recipes: "Unshare recipes before changing your source repo.",
+  sharing_repo_has_published_recipes: "Remove published copies before changing either repo.",
+  sharing_repo_not_empty: "Choose an empty public sharing repo so existing files are not overwritten.",
+  repo_change_check_failed: "Could not verify published recipes. Try again.",
+  migration_failed: "Could not copy all shared recipes. Your sharing repo is selected; use Sync below to retry.",
+  sharing_config_load_failed: "Could not load this repo's sharing configuration. Try again.",
+  sharing_config_invalid: "This repo's saved sharing destination is no longer a separate public repo you can write to.",
+  sharing_config_save_failed: "Could not save the sharing configuration. Try again.",
+};
+const error = errorMessages[Astro.url.searchParams.get("error") ?? ""];
+const privateRepos = repos.filter((repo) => repo.private);
+const publicRepos = repos.filter((repo) => !repo.private);
 ---
 <Layout title="Settings">
-  <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
-  <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-    Store recipes in a private GitHub repo, then copy only recipes you choose to share into a separate public repo.
-  </p>
+  <div class="space-y-7 pb-12 sm:space-y-9">
+    <header>
+      <p class="eyebrow">Your space</p>
+      <h1 class="page-title mt-2">Settings</h1>
+      <p class="page-intro mt-3">Keep your collection private. Choose a separate public repo when you want to share recipes.</p>
+    </header>
 
-  {error === "no_access" && (
-    <p class="mt-4 text-red-600 dark:text-red-400">
-      You no longer have push access to that repo. Pick a different one below.
-    </p>
-  )}
+    {error && <p role="alert" class="rounded-2xl border border-[#d6a494] bg-[#fff1eb] px-4 py-3 text-sm leading-relaxed text-[#813b2d]">{error}</p>}
 
-  {error === "source_must_be_private" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a private repo for recipe storage.</p>}
-  {error === "sharing_must_be_public" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a public repo for shared recipes.</p>}
-  {error === "sharing_must_differ" && <p class="mt-4 text-red-600 dark:text-red-400">Choose a different repo for shared recipes.</p>}
-  {error === "source_has_shared_recipes" && <p class="mt-4 text-red-600 dark:text-red-400">Unshare recipes before changing your source repo.</p>}
-  {error === "sharing_repo_has_published_recipes" && <p class="mt-4 text-red-600 dark:text-red-400">Remove published copies before changing either repo.</p>}
-  {error === "sharing_repo_not_empty" && <p class="mt-4 text-red-600 dark:text-red-400">Choose an empty public sharing repo so existing files are not overwritten.</p>}
-  {error === "repo_change_check_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not verify published recipes. Try again.</p>}
-  {error === "migration_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not copy all shared recipes. Your sharing repo is selected; use Sync below to retry.</p>}
-  {error === "sharing_config_load_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not load this repo's sharing configuration. Try again.</p>}
-  {error === "sharing_config_invalid" && <p class="mt-4 text-red-600 dark:text-red-400">This repo's saved sharing destination is no longer a separate public repo you can write to.</p>}
-  {error === "sharing_config_save_failed" && <p class="mt-4 text-red-600 dark:text-red-400">Could not save the sharing configuration. Try again.</p>}
-
-  <section class="mt-6">
-    <h2 class="text-lg font-semibold tracking-tight">Private recipe repo</h2>
-    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Your complete recipe collection stays here.</p>
-  <ul class="mt-4 flex flex-col gap-2">
-    {repos.filter((repo) => repo.private).map((repo) => {
-      const isCurrent = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
-      return (
-        <li class="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
-          <span>
-            {repo.owner}/{repo.name}
-            {repo.private && <span class="ml-2 rounded-md bg-zinc-100 px-2 py-0.5 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">private</span>}
-            {!repo.private && <span class="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">public</span>}
-            {isCurrent && <span class="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">selected</span>}
-          </span>
-          <form method="POST" action="/api/settings/repo">
-            <input type="hidden" name="owner" value={repo.owner} />
-            <input type="hidden" name="name" value={repo.name} />
-            <button
-              type="submit"
-              class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:bg-green-700 dark:hover:bg-green-800"
-            >
-              {isCurrent ? "Reload" : "Select"}
-            </button>
-          </form>
-        </li>
-      );
-    })}
-  </ul>
-  </section>
-
-  <section class="mt-8">
-    <h2 class="text-lg font-semibold tracking-tight">Public sharing repo</h2>
-    <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Only recipes you explicitly share are copied here. GitHub history can retain copies after you unshare them.</p>
-    <ul class="mt-4 flex flex-col gap-2">
-      {repos.filter((repo) => !repo.private).map((repo) => {
-        const isCurrent = session.sharingRepo?.owner === repo.owner && session.sharingRepo?.name === repo.name;
-        const isSource = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
-        return (
-          <li class="flex items-center justify-between rounded-md border border-zinc-200 p-3 dark:border-zinc-700">
-            <span>
-              {repo.owner}/{repo.name}
-              <span class="ml-2 rounded-md bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-900 dark:text-amber-300">public</span>
-              {isCurrent && <span class="ml-2 rounded-md bg-green-100 px-2 py-0.5 text-xs text-green-700 dark:bg-green-900 dark:text-green-300">selected</span>}
-            </span>
-            <form method="POST" action="/api/settings/sharing-repo">
-              <input type="hidden" name="owner" value={repo.owner} />
-              <input type="hidden" name="name" value={repo.name} />
-              <button
-                type="submit"
-                class="rounded-md bg-green-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-green-700 dark:hover:bg-green-800"
-                disabled={isSource}
-              >
-                {isCurrent ? "Sync" : isSource ? "Source repo" : "Select"}
-              </button>
-            </form>
-          </li>
-        );
-      })}
-    </ul>
-  </section>
-  {session.repo && (
-    <section class="mt-8 rounded-md border border-zinc-200 p-4 dark:border-zinc-700">
-      <h2 class="text-lg font-semibold tracking-tight">Share your profile</h2>
-      <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-        Recipes you choose to share appear at this link. This setting only controls your Kalorec profile.
-      </p>
-      <label for="share-link" class="mt-3 block text-sm font-medium">Profile link</label>
-      <div class="mt-1 flex gap-2">
-        <input
-          type="text"
-          id="share-link"
-          readonly
-          value={session.sharingRepo ? `${Astro.url.origin}/u/${session.sharingRepo.owner}/${session.sharingRepo.name}` : "Choose a public sharing repo first"}
-          class="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
-        />
-        <button
-          type="button"
-          id="copy-share-link"
-          class="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-700 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          disabled={!session.sharingRepo}
-        >Copy</button>
+    <section aria-labelledby="private-repo-heading" class="surface-card p-5 sm:p-7">
+      <div class="flex items-start gap-4">
+        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">1</span>
+        <div>
+          <h2 id="private-repo-heading" class="section-title">Private recipe repo</h2>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Your complete recipe collection stays here.</p>
+        </div>
       </div>
-      {!session.sharingRepo && (
-        <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
-          Choose a public sharing repo before sharing your profile.
-        </p>
-      )}
-      {session.sharingRepo && (
-        <p class="mt-2 text-sm text-amber-700 dark:text-amber-400">
-          Shared recipe copies are public on GitHub and may remain in Git history after unsharing.
-        </p>
+      {privateRepos.length === 0 ? (
+        <p class="mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm text-[var(--muted)]">No private repos with write access found. Create one on GitHub, then return here.</p>
+      ) : (
+        <ul class="mt-5 grid gap-3">
+          {privateRepos.map((repo) => {
+            const isCurrent = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
+            return (
+              <li class:list={["flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between", isCurrent ? "border-[var(--forest)] bg-[var(--sage)]" : "border-[var(--line)] bg-[var(--surface)]"]}>
+                <div class="min-w-0">
+                  <p class="break-all font-medium text-[var(--ink)]">{repo.owner}/{repo.name}</p>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span class="rounded-full bg-[#e9eee7] px-2.5 py-1 text-[#526358]">Private</span>
+                    {isCurrent && <span class="rounded-full bg-[#dcebd8] px-2.5 py-1 text-[#27523a]">Selected</span>}
+                  </div>
+                </div>
+                <form method="POST" action="/api/settings/repo" class="shrink-0">
+                  <input type="hidden" name="owner" value={repo.owner} />
+                  <input type="hidden" name="name" value={repo.name} />
+                  <button type="submit" class="button-primary min-h-11 w-full sm:w-auto">{isCurrent ? "Reload recipes" : "Select repo"}</button>
+                </form>
+              </li>
+            );
+          })}
+        </ul>
       )}
     </section>
-  )}
-</Layout>
 
+    <section aria-labelledby="sharing-repo-heading" class="surface-card p-5 sm:p-7">
+      <div class="flex items-start gap-4">
+        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">2</span>
+        <div>
+          <h2 id="sharing-repo-heading" class="section-title">Public sharing repo</h2>
+          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Only recipes you choose to share are copied here.</p>
+        </div>
+      </div>
+      {publicRepos.length === 0 ? (
+        <p class="mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm text-[var(--muted)]">No public repos with write access found. Create an empty one on GitHub to share recipes.</p>
+      ) : (
+        <ul class="mt-5 grid gap-3">
+          {publicRepos.map((repo) => {
+            const isCurrent = session.sharingRepo?.owner === repo.owner && session.sharingRepo?.name === repo.name;
+            const isSource = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
+            return (
+              <li class:list={["flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between", isCurrent ? "border-[var(--forest)] bg-[var(--sage)]" : "border-[var(--line)] bg-[var(--surface)]"]}>
+                <div class="min-w-0">
+                  <p class="break-all font-medium text-[var(--ink)]">{repo.owner}/{repo.name}</p>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                    <span class="rounded-full bg-[#fff0d9] px-2.5 py-1 text-[#83571a]">Public</span>
+                    {isCurrent && <span class="rounded-full bg-[#dcebd8] px-2.5 py-1 text-[#27523a]">Selected</span>}
+                  </div>
+                </div>
+                <form method="POST" action="/api/settings/sharing-repo" class="shrink-0">
+                  <input type="hidden" name="owner" value={repo.owner} />
+                  <input type="hidden" name="name" value={repo.name} />
+                  <button type="submit" class="button-primary min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" disabled={isSource}>{isCurrent ? "Sync recipes" : isSource ? "Source repo" : "Select repo"}</button>
+                </form>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      <p class="mt-4 text-xs leading-relaxed text-[var(--muted)]">Public copies may remain in GitHub history after you unshare them.</p>
+    </section>
+
+    {session.repo && (
+      <section aria-labelledby="share-profile-heading" class="surface-card p-5 sm:p-7">
+        <div class="flex items-start gap-4">
+          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">3</span>
+          <div>
+            <h2 id="share-profile-heading" class="section-title">Share your profile</h2>
+            <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Send this link to show the recipes you have shared.</p>
+          </div>
+        </div>
+        <label for="share-link" class="mt-5 block text-sm font-semibold">Profile link</label>
+        <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input type="text" id="share-link" readonly value={session.sharingRepo ? `${Astro.url.origin}/u/${session.sharingRepo.owner}/${session.sharingRepo.name}` : "Choose a public sharing repo first"} class="field min-h-11 min-w-0 flex-1" />
+          <button type="button" id="copy-share-link" class="button-secondary min-h-11 disabled:cursor-not-allowed disabled:opacity-60" disabled={!session.sharingRepo}>Copy link</button>
+        </div>
+        {!session.sharingRepo && <p class="mt-3 text-sm text-[#83571a] dark:text-amber-300">Choose a public sharing repo to get your link.</p>}
+      </section>
+    )}
+  </div>
+</Layout>
 <script src="../scripts/settings.ts"></script>

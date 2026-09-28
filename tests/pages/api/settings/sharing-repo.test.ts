@@ -48,7 +48,7 @@ describe("POST /api/settings/sharing-repo", () => {
     const set = vi.fn();
     const response = await POST({ request: request({ owner: "rob", name: "shared" }), locals: { session }, cookies: { set }, redirect } as any);
     expect(response.headers.get("Location")).toBe("/settings");
-    expect(publishRecipe).toHaveBeenCalledWith(sharingStore, recipe);
+    expect(publishRecipe).toHaveBeenCalledWith(sharingStore, recipe, expect.objectContaining({ repo: expect.objectContaining({ name: "private-recipes" }) }));
     expect(decryptSession(set.mock.calls[0][1], "test-secret-value")?.sharingRepo).toEqual({ owner: "rob", name: "shared", branch: "main", private: false });
   });
 
@@ -99,7 +99,7 @@ describe("POST /api/settings/sharing-repo", () => {
     const selectedSession = { ...session, sharingRepo: { owner: "rob", name: "shared", branch: "main", private: false } };
     const response = await POST({ request: request({ owner: "rob", name: "shared" }), locals: { session: selectedSession }, cookies: { set: vi.fn() }, redirect } as any);
     expect(response.headers.get("Location")).toBe("/settings");
-    expect(unpublishRecipe).toHaveBeenCalledWith(sharingStore, "stale");
+    expect(unpublishRecipe).toHaveBeenCalledWith(sharingStore, "stale", expect.objectContaining({ repo: expect.objectContaining({ name: "private-recipes" }) }));
     expect(publishRecipe).not.toHaveBeenCalled();
   });
 });
