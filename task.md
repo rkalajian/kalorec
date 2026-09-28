@@ -91,3 +91,15 @@ Goal: make `/about` a short, scannable explanation of Kalorec and its privacy mo
 Acceptance: app purpose and GitHub storage are clear; shopping and sharing behavior remain accurate; privacy history warning remains visible.
 
 Result: About page now has a concise introduction, three feature cards, a Git history note, and a guide link. Responsive grid, heading order, focus styling, and text contrast reviewed; production build and diff check passed.
+
+## Follow-up: Settings page cleanup
+
+Goal: make selected repositories and next actions easy to find while keeping repo changes, sync, and profile sharing available.
+
+1. Reorganize `src/pages/settings.astro` around current private/public selections, expandable alternative repo lists, and a conditional profile link. Executor: main.
+2. Check error states, keyboard and mobile behavior, build, tests, and diff. Executor: main.
+3. Commit and push to `main` as requested. Executor: main.
+
+Acceptance: current repo choices remain visible; alternative choices are discoverable; reload/sync and copy-link actions work; required privacy guidance remains clear.
+
+Result: selected repos now sit in prominent cards; alternative choices use accessible disclosure controls; public setup waits for private selection; profile link appears when available. Manual keyboard, heading, contrast, and mobile-width review completed. All 236 tests, production build, and diff check passed.

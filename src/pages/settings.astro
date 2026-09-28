@@ -33,104 +33,118 @@ const errorMessages: Record<string, string> = {
 const error = errorMessages[Astro.url.searchParams.get("error") ?? ""];
 const privateRepos = repos.filter((repo) => repo.private);
 const publicRepos = repos.filter((repo) => !repo.private);
+const selectedPrivate = privateRepos.find((repo) => repo.owner === session.repo?.owner && repo.name === session.repo?.name);
+const selectedPublic = publicRepos.find((repo) => repo.owner === session.sharingRepo?.owner && repo.name === session.sharingRepo?.name);
+const privateChoices = privateRepos.filter((repo) => repo !== selectedPrivate);
+const publicChoices = publicRepos.filter((repo) => repo !== selectedPublic);
 ---
 <Layout title="Settings">
-  <div class="space-y-7 pb-12 sm:space-y-9">
-    <header>
-      <p class="eyebrow">Your space</p>
+  <div class="space-y-6 pb-12">
+    <header class="max-w-3xl">
+      <p class="eyebrow">Your collection</p>
       <h1 class="page-title mt-2">Settings</h1>
-      <p class="page-intro mt-3">Keep your collection private. Choose a separate public repo when you want to share recipes.</p>
+      <p class="page-intro mt-3">Choose a private home for your recipes. Add a separate public repo only when you want to share.</p>
     </header>
 
     {error && <p role="alert" class="rounded-2xl border border-[#d6a494] bg-[#fff1eb] px-4 py-3 text-sm leading-relaxed text-[#813b2d]">{error}</p>}
 
-    <section aria-labelledby="private-repo-heading" class="surface-card p-5 sm:p-7">
-      <div class="flex items-start gap-4">
-        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">1</span>
-        <div>
-          <h2 id="private-repo-heading" class="section-title">Private recipe repo</h2>
-          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Your complete recipe collection stays here.</p>
-        </div>
-      </div>
-      {privateRepos.length === 0 ? (
-        <p class="mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm text-[var(--muted)]">No private repos with write access found. Create one on GitHub, then return here.</p>
-      ) : (
-        <ul class="mt-5 grid gap-3">
-          {privateRepos.map((repo) => {
-            const isCurrent = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
-            return (
-              <li class:list={["flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between", isCurrent ? "border-[var(--forest)] bg-[var(--sage)]" : "border-[var(--line)] bg-[var(--surface)]"]}>
-                <div class="min-w-0">
-                  <p class="break-all font-medium text-[var(--ink)]">{repo.owner}/{repo.name}</p>
-                  <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span class="rounded-full bg-[#e9eee7] px-2.5 py-1 text-[#526358]">Private</span>
-                    {isCurrent && <span class="rounded-full bg-[#dcebd8] px-2.5 py-1 text-[#27523a]">Selected</span>}
-                  </div>
-                </div>
-                <form method="POST" action="/api/settings/repo" class="shrink-0">
-                  <input type="hidden" name="owner" value={repo.owner} />
-                  <input type="hidden" name="name" value={repo.name} />
-                  <button type="submit" class="button-primary min-h-11 w-full sm:w-auto">{isCurrent ? "Reload recipes" : "Select repo"}</button>
-                </form>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
+    <div class="grid items-start gap-5 lg:grid-cols-2">
+      <section aria-labelledby="private-repo-heading" class="surface-card p-5 sm:p-7">
+        <p class="eyebrow">Storage</p>
+        <h2 id="private-repo-heading" class="section-title mt-2">Private recipe repo</h2>
+        <p class="muted mt-2 text-sm leading-relaxed">Your recipes and saved shopping list live here.</p>
 
-    <section aria-labelledby="sharing-repo-heading" class="surface-card p-5 sm:p-7">
-      <div class="flex items-start gap-4">
-        <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">2</span>
-        <div>
-          <h2 id="sharing-repo-heading" class="section-title">Public sharing repo</h2>
-          <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Only recipes you choose to share are copied here.</p>
-        </div>
-      </div>
-      {publicRepos.length === 0 ? (
-        <p class="mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm text-[var(--muted)]">No public repos with write access found. Create an empty one on GitHub to share recipes.</p>
-      ) : (
-        <ul class="mt-5 grid gap-3">
-          {publicRepos.map((repo) => {
-            const isCurrent = session.sharingRepo?.owner === repo.owner && session.sharingRepo?.name === repo.name;
-            const isSource = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
-            return (
-              <li class:list={["flex flex-col gap-3 rounded-2xl border p-4 sm:flex-row sm:items-center sm:justify-between", isCurrent ? "border-[var(--forest)] bg-[var(--sage)]" : "border-[var(--line)] bg-[var(--surface)]"]}>
-                <div class="min-w-0">
-                  <p class="break-all font-medium text-[var(--ink)]">{repo.owner}/{repo.name}</p>
-                  <div class="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
-                    <span class="rounded-full bg-[#fff0d9] px-2.5 py-1 text-[#83571a]">Public</span>
-                    {isCurrent && <span class="rounded-full bg-[#dcebd8] px-2.5 py-1 text-[#27523a]">Selected</span>}
-                  </div>
-                </div>
-                <form method="POST" action="/api/settings/sharing-repo" class="shrink-0">
-                  <input type="hidden" name="owner" value={repo.owner} />
-                  <input type="hidden" name="name" value={repo.name} />
-                  <button type="submit" class="button-primary min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" disabled={isSource}>{isCurrent ? "Sync recipes" : isSource ? "Source repo" : "Select repo"}</button>
-                </form>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <p class="mt-4 text-xs leading-relaxed text-[var(--muted)]">Public copies may remain in GitHub history after you unshare them.</p>
-    </section>
+        {selectedPrivate && (
+          <div class="mt-5 rounded-2xl border border-[var(--forest)] bg-[var(--sage)] p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-[var(--forest)]">Current repo</p>
+            <p class="mt-1 break-all font-semibold">{selectedPrivate.owner}/{selectedPrivate.name}</p>
+            <form method="POST" action="/api/settings/repo" class="mt-4">
+              <input type="hidden" name="owner" value={selectedPrivate.owner} />
+              <input type="hidden" name="name" value={selectedPrivate.name} />
+              <button type="submit" class="button-secondary w-full sm:w-auto">Reload recipes</button>
+            </form>
+          </div>
+        )}
+
+        {privateRepos.length === 0 ? (
+          <p class="muted mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm leading-relaxed">No private repos with write access found. Create one on GitHub, then return here.</p>
+        ) : privateChoices.length > 0 && (
+          <details open={!selectedPrivate || Boolean(error)} class="mt-5 rounded-2xl border border-[var(--line)]">
+            <summary class="min-h-11 cursor-pointer px-4 py-3 font-semibold">{selectedPrivate ? "Change private repo" : "Choose a private repo"}</summary>
+            <ul class="grid gap-2 border-t border-[var(--line)] p-3">
+              {privateChoices.map((repo) => (
+                <li class="flex min-w-0 flex-col gap-3 rounded-xl bg-[var(--sage)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span class="break-all text-sm font-medium">{repo.owner}/{repo.name}</span>
+                  <form method="POST" action="/api/settings/repo" class="shrink-0">
+                    <input type="hidden" name="owner" value={repo.owner} />
+                    <input type="hidden" name="name" value={repo.name} />
+                    <button type="submit" class="button-primary w-full sm:w-auto" aria-label={`Select ${repo.owner}/${repo.name} as private recipe repo`}>Select</button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </section>
+
+      <section aria-labelledby="sharing-repo-heading" class="surface-card p-5 sm:p-7">
+        <p class="eyebrow">Optional sharing</p>
+        <h2 id="sharing-repo-heading" class="section-title mt-2">Public sharing repo</h2>
+        <p class="muted mt-2 text-sm leading-relaxed">Only recipes you publish are copied here. Choose a separate, empty public repo.</p>
+
+        {session.repo?.private && selectedPublic && (
+          <div class="mt-5 rounded-2xl border border-[var(--forest)] bg-[var(--sage)] p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-[var(--forest)]">Current repo</p>
+            <p class="mt-1 break-all font-semibold">{selectedPublic.owner}/{selectedPublic.name}</p>
+            <form method="POST" action="/api/settings/sharing-repo" class="mt-4">
+              <input type="hidden" name="owner" value={selectedPublic.owner} />
+              <input type="hidden" name="name" value={selectedPublic.name} />
+              <button type="submit" class="button-secondary w-full sm:w-auto">Sync recipes</button>
+            </form>
+          </div>
+        )}
+
+        {!session.repo?.private ? (
+          <p class="muted mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm leading-relaxed">Choose a private recipe repo first to set up sharing.</p>
+        ) : publicRepos.length === 0 ? (
+          <p class="muted mt-5 rounded-2xl bg-[var(--sage)] p-4 text-sm leading-relaxed">No public repos with write access found. Create an empty one on GitHub if you want to share recipes.</p>
+        ) : publicChoices.length > 0 && (
+          <details open={!selectedPublic || Boolean(error)} class="mt-5 rounded-2xl border border-[var(--line)]">
+            <summary class="min-h-11 cursor-pointer px-4 py-3 font-semibold">{selectedPublic ? "Change public repo" : "Choose a public repo"}</summary>
+            <ul class="grid gap-2 border-t border-[var(--line)] p-3">
+              {publicChoices.map((repo) => {
+                const isSource = session.repo?.owner === repo.owner && session.repo?.name === repo.name;
+                return (
+                  <li class="flex min-w-0 flex-col gap-3 rounded-xl bg-[var(--sage)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span class="break-all text-sm font-medium">{repo.owner}/{repo.name}</span>
+                    <form method="POST" action="/api/settings/sharing-repo" class="shrink-0">
+                      <input type="hidden" name="owner" value={repo.owner} />
+                      <input type="hidden" name="name" value={repo.name} />
+                      <button type="submit" class="button-primary w-full disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto" disabled={isSource} aria-label={isSource ? `${repo.owner}/${repo.name} is your source repo` : `Select ${repo.owner}/${repo.name} as public sharing repo`}>{isSource ? "Source repo" : "Select"}</button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          </details>
+        )}
+        <p class="muted mt-4 text-xs leading-relaxed">Unpublishing removes the current copy. Earlier public copies may remain in Git history.</p>
+      </section>
+    </div>
 
     {session.repo && (
       <section aria-labelledby="share-profile-heading" class="surface-card p-5 sm:p-7">
-        <div class="flex items-start gap-4">
-          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">3</span>
-          <div>
-            <h2 id="share-profile-heading" class="section-title">Share your profile</h2>
-            <p class="mt-1 text-sm leading-relaxed text-[var(--muted)]">Send this link to show the recipes you have shared.</p>
-          </div>
-        </div>
-        <label for="share-link" class="mt-5 block text-sm font-semibold">Profile link</label>
-        <div class="mt-2 flex flex-col gap-2 sm:flex-row">
-          <input type="text" id="share-link" readonly value={session.sharingRepo ? `${Astro.url.origin}/u/${session.sharingRepo.owner}/${session.sharingRepo.name}` : "Choose a public sharing repo first"} class="field min-h-11 min-w-0 flex-1" />
-          <button type="button" id="copy-share-link" class="button-secondary min-h-11 disabled:cursor-not-allowed disabled:opacity-60" disabled={!session.sharingRepo}>Copy link</button>
-        </div>
-        {!session.sharingRepo && <p class="mt-3 text-sm text-[#83571a] dark:text-amber-300">Choose a public sharing repo to get your link.</p>}
+        <h2 id="share-profile-heading" class="section-title">Your profile link</h2>
+        <p class="muted mt-2 text-sm leading-relaxed">Share this link to show your published recipes.</p>
+        {session.sharingRepo ? (
+          <>
+            <label for="share-link" class="mt-5 block text-sm font-semibold">Public profile URL</label>
+            <div class="mt-2 flex flex-col gap-2 sm:flex-row">
+              <input type="text" id="share-link" readonly value={`${Astro.url.origin}/u/${session.sharingRepo.owner}/${session.sharingRepo.name}`} class="field min-h-11 min-w-0 flex-1" />
+              <button type="button" id="copy-share-link" class="button-secondary min-h-11" aria-live="polite">Copy link</button>
+            </div>
+          </>
+        ) : <p class="muted mt-4 text-sm">Choose a public sharing repo above to get your profile link.</p>}
       </section>
     )}
   </div>
