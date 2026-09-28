@@ -1,5 +1,5 @@
 ---
-import "../styles/global.css";
+import Layout from "../layouts/Layout.astro";
 
 const error = Astro.url.searchParams.get("error");
 const errorMessages: Record<string, string> = {
@@ -9,19 +9,13 @@ const errorMessages: Record<string, string> = {
 };
 const message = error ? errorMessages[error] ?? "Something went wrong. Please try again." : null;
 ---
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Kalorec</title>
-  </head>
-  <body class="flex min-h-screen items-center justify-center p-4">
-    <main class="surface-card w-full max-w-md p-8 text-center sm:p-10">
-      <div class="site-brand justify-center"><span class="site-brand__mark" aria-hidden="true">K</span>Kalorec</div>
-      <h1 class="section-title mt-6">Welcome back to your kitchen</h1>
+<Layout title="Log in" session={null}>
+  <div class="mx-auto flex min-h-[50vh] max-w-md items-center">
+    <section class="surface-card w-full p-8 text-center sm:p-10">
+      <p class="eyebrow">Kalorec</p>
+      <h1 class="section-title mt-3">Welcome back to your kitchen</h1>
       {message && <p class="mt-4 text-red-700 dark:text-red-300" role="alert">{message}</p>}
       <a href="/api/auth/login" class="button-primary mt-6">Log in with GitHub</a>
-    </main>
-  </body>
-</html>
+    </section>
+  </div>
+</Layout>

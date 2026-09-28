@@ -1,5 +1,21 @@
 # Goal
 
+## Follow-up: login count and footer
+
+Goal: count distinct GitHub accounts that successfully log in and show the total in a shared footer with a privacy policy and current copyright year.
+
+1. Store one persistent record per immutable GitHub user ID in site-wide Netlify Blobs; read the total by listing records. Executor: main. Targets: `src/lib/loginCount.ts`, OAuth callback, dependency, focused tests.
+2. Add a responsive shared footer and public privacy page with accurate account, recipe, shopping-list, and sharing disclosures. Executor: subagent. Targets: layout, styles, route policy, privacy page.
+3. Verify login deduplication, failure behavior, route access, tests, TypeScript, build, and diff.
+
+Acceptance: repeat logins by one GitHub ID leave the count unchanged; distinct IDs increase it; counter survives deployments; guests can read privacy policy and footer; login remains usable if count storage fails; privacy copy matches implementation.
+
+Result: site-wide Netlify Blobs stores one key per GitHub account ID, with the unique total shown in the shared footer. Added a public privacy policy and current-year copyright line. Existing historical logins cannot be reconstructed; counting begins after deployment. All 245 tests, TypeScript, production build, and diff check passed.
+
+---
+
+# Previous work
+
 Add a private shopping list built from selected recipes. Keep ingredient lines as written; users can edit, check, add, remove, copy, and print items. Persist the list in the selected private source repo.
 
 # Plan and targets

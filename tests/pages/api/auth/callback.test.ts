@@ -7,6 +7,9 @@ import {
   OAUTH_STATE_COOKIE,
 } from "../../../../src/lib/session";
 
+const recordLogin = vi.hoisted(() => vi.fn());
+vi.mock("../../../../src/lib/loginCount", () => ({ recordLogin }));
+
 function fakeContext(opts: {
   code?: string;
   state?: string;
@@ -38,6 +41,7 @@ function fakeContext(opts: {
 
 describe("GET /api/auth/callback", () => {
   beforeEach(() => {
+    recordLogin.mockReset().mockResolvedValue(undefined);
     vi.stubEnv("GITHUB_CLIENT_ID", "client-abc");
     vi.stubEnv("GITHUB_CLIENT_SECRET", "secret-xyz");
     vi.stubEnv("SESSION_SECRET", "test-secret-value");
@@ -82,7 +86,7 @@ describe("GET /api/auth/callback", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "gho_new" }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob" }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob", id: 42 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     const { GET } = await import("../../../../src/pages/api/auth/callback");
@@ -90,6 +94,8 @@ describe("GET /api/auth/callback", () => {
     const response = await GET(context as any);
 
     expect(response.headers.get("Location")).toBe("/settings");
+    expect(recordLogin).toHaveBeenCalledTimes(1);
+    expect(recordLogin).toHaveBeenCalledWith(42);
     expect(setCalls).toHaveLength(1);
     const [cookieName, cookieValue, cookieOptions] = setCalls[0];
     expect(cookieName).toBe(SESSION_COOKIE);
@@ -102,11 +108,27 @@ describe("GET /api/auth/callback", () => {
     });
   });
 
+  it("still logs in when count storage fails", async () => {
+    recordLogin.mockRejectedValueOnce(new Error("storage unavailable"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.stubGlobal("fetch", vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "gho_new" })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob", id: 42 }))));
+
+    const { GET } = await import("../../../../src/pages/api/auth/callback");
+    const { context, setCalls } = fakeContext({ code: "abc", state: "right", cookieState: "right" });
+    const response = await GET(context as any);
+
+    expect(response.headers.get("Location")).toBe("/settings");
+    expect(setCalls).toHaveLength(1);
+    log.mockRestore();
+  });
+
   it("sets the session cookie with hardened flags", async () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "gho_new" }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob" }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob", id: 42 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     const { GET } = await import("../../../../src/pages/api/auth/callback");
@@ -126,7 +148,7 @@ describe("GET /api/auth/callback", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "gho_new" }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob" }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "rob", id: 42 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     const previousCookie = encryptSession(
@@ -162,7 +184,7 @@ describe("GET /api/auth/callback", () => {
     const fetchMock = vi
       .fn()
       .mockResolvedValueOnce(new Response(JSON.stringify({ access_token: "gho_bob" }), { status: 200 }))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "bob" }), { status: 200 }));
+      .mockResolvedValueOnce(new Response(JSON.stringify({ login: "bob", id: 73 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
     const alicesCookie = encryptSession(

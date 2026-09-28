@@ -8,6 +8,7 @@ import {
   OAUTH_STATE_COOKIE,
   type Session,
 } from "../../../lib/session";
+import { recordLogin } from "../../../lib/loginCount";
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   // Read required config up front so a misconfigured deploy fails fast and loudly
@@ -27,6 +28,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
   let accessToken: string | undefined;
   let userLogin: string | undefined;
+  let userId: number | undefined;
   try {
     const tokenRes = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
@@ -47,10 +49,12 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
       headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/vnd.github+json" },
     });
     const userData = await userRes.json().catch(() => null);
-    if (!userRes.ok || !userData?.login) {
+    if (!userRes.ok || typeof userData?.login !== "string" || !userData.login ||
+      !Number.isSafeInteger(userData?.id) || userData.id <= 0) {
       return redirect("/logged-out?error=token_exchange_failed");
     }
     userLogin = userData.login;
+    userId = userData.id;
   } catch {
     return redirect("/logged-out?error=token_exchange_failed");
   }
@@ -68,6 +72,13 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   };
 
   cookies.set(SESSION_COOKIE, encryptSession(session, sessionSecret), SESSION_COOKIE_OPTIONS);
+
+  try {
+    await recordLogin(userId!);
+  } catch (error) {
+    // A storage outage must not prevent a verified GitHub user from logging in.
+    console.error("Unable to record login", error);
+  }
 
   return redirect(session.repo ? "/" : "/settings");
 };

@@ -9,7 +9,8 @@ export function isPublicPath(pathname: string): boolean {
     pathname.startsWith("/u/") ||
     pathname.startsWith("/api/images/public/") ||
     pathname === "/about" ||
-    pathname === "/how-to-use"
+    pathname === "/how-to-use" ||
+    pathname === "/privacy"
   );
 }
 

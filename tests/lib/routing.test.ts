@@ -25,9 +25,10 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/api/shopping-list")).toBe(false);
   });
 
-  it("treats the about and how-to-use pages as public", () => {
+  it("treats informational pages as public", () => {
     expect(isPublicPath("/about")).toBe(true);
     expect(isPublicPath("/how-to-use")).toBe(true);
+    expect(isPublicPath("/privacy")).toBe(true);
   });
 
   it("treats public profile pages as public", () => {
@@ -52,6 +53,7 @@ describe("decideRoute", () => {
     expect(decideRoute(null, "/api/auth/login")).toEqual({ proceed: true });
     expect(decideRoute(null, "/api/auth/callback")).toEqual({ proceed: true });
     expect(decideRoute(null, "/logged-out")).toEqual({ proceed: true });
+    expect(decideRoute(null, "/privacy")).toEqual({ proceed: true });
   });
 
   it("proceeds on public profile pages even with no session", () => {
@@ -62,6 +64,7 @@ describe("decideRoute", () => {
   it("proceeds on public paths even when a repo-less session exists", () => {
     expect(decideRoute(sessionNoRepo, "/logged-out")).toEqual({ proceed: true });
     expect(decideRoute(sessionNoRepo, "/api/auth/logout")).toEqual({ proceed: true });
+    expect(decideRoute(sessionNoRepo, "/privacy")).toEqual({ proceed: true });
   });
 
   it("redirects to settings when the session has no repo chosen", () => {
