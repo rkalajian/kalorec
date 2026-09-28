@@ -1,5 +1,19 @@
 # Goal
 
+## Follow-up: public recipe search
+
+Goal: search recipes across the public profiles listed on `/users`.
+
+1. Add server-side search of public recipes by title, tags, and ingredients, with bounded query input and partial-failure reporting. Executor: main. Targets: new `src/lib/publicRecipeSearch.ts`, focused tests.
+2. Add an accessible GET search form and linked results to `/users`, retaining the people directory. Executor: subagent. Target: `src/pages/users.astro`.
+3. Verify query handling, public-only results, profile and recipe links, tests, TypeScript, build, diff, and frontend accessibility.
+
+Acceptance: visitors can search all listed public collections; results link to recipes and identify owners; an empty query leaves the directory unchanged; unavailable collections are disclosed without hiding available results.
+
+Result: `/users` now has a GET search across public recipe titles, tags, and ingredients. Results link directly to recipes and identify the profile; partial collection failures are disclosed. All 256 tests, TypeScript, build, and diff check passed.
+
+---
+
 ## Follow-up: public profile directory
 
 Goal: list Kalorec accounts with a selected public sharing repository and link to each public profile.

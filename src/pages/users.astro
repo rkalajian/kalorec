@@ -1,14 +1,30 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import RecipeCard from "../components/RecipeCard.astro";
 import { listPublicProfiles } from "../lib/publicProfiles";
+import { MAX_RECIPE_SEARCH_LENGTH, searchPublicRecipes } from "../lib/publicRecipeSearch";
 
+const query = (Astro.url.searchParams.get("q") ?? "").trim();
+const searching = query.length > 0;
+const queryTooLong = query.length > MAX_RECIPE_SEARCH_LENGTH;
 let profiles: Awaited<ReturnType<typeof listPublicProfiles>> = [];
 let unavailable = false;
+let matches: Awaited<ReturnType<typeof searchPublicRecipes>>["matches"] = [];
+let failedCount = 0;
+let searchUnavailable = false;
 try {
   profiles = await listPublicProfiles();
 } catch (error) {
   console.error("Unable to load public profile directory", error);
   unavailable = true;
+}
+if (!unavailable && searching && !queryTooLong && profiles.length > 0) {
+  try {
+    ({ matches, failedCount } = await searchPublicRecipes(profiles, query));
+  } catch (error) {
+    console.error("Unable to search public recipes", error);
+    searchUnavailable = true;
+  }
 }
 ---
 <Layout title="People">
@@ -19,20 +35,61 @@ try {
       <p class="page-intro mt-4">Explore public recipe collections shared by Kalorec users.</p>
     </header>
 
+    <form action="/users" method="get" role="search" class="surface-card mt-8 p-4 sm:p-5">
+      <label for="recipe-search" class="block text-sm font-bold">Search public recipes</label>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <input id="recipe-search" name="q" type="search" value={query} maxlength={MAX_RECIPE_SEARCH_LENGTH} placeholder="Search name, tag, or ingredient" class="field min-w-0 flex-1" />
+        <button type="submit" class="button-primary">Search</button>
+        {searching && <a href="/users" class="button-secondary">Clear search</a>}
+      </div>
+      {queryTooLong && <p class="mt-3 text-sm" role="alert">Search terms must be {MAX_RECIPE_SEARCH_LENGTH} characters or fewer.</p>}
+    </form>
+
+    {searching && !queryTooLong && !unavailable && (
+      <section class="mt-10" aria-labelledby="search-results-heading">
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="search-results-heading" class="section-title">Recipe results</h2>
+          {!searchUnavailable && <p class="muted text-sm" role="status">{matches.length} {matches.length === 1 ? "recipe" : "recipes"} found</p>}
+        </div>
+        {searchUnavailable ? (
+          <p class="surface-card mt-5 p-6 text-center muted" role="status">Recipe search is temporarily unavailable. Please try again later.</p>
+        ) : (
+          <>
+            {failedCount > 0 && <p class="surface-card mt-5 p-4 muted" role="status">Some collections could not be searched. Results may be incomplete.</p>}
+            {matches.length === 0 ? (
+              <p class="surface-card mt-5 p-6 text-center muted">No recipes found in available collections.</p>
+            ) : (
+              <ul class="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {matches.map(({ profile, recipe }) => (
+                  <li class="min-w-0">
+                    <RecipeCard recipe={recipe} href={`/u/${encodeURIComponent(profile.owner)}/${encodeURIComponent(profile.repo)}/${encodeURIComponent(recipe.slug)}`} />
+                    <p class="muted mt-2 break-words text-sm">By <a href={`/u/${encodeURIComponent(profile.owner)}/${encodeURIComponent(profile.repo)}`} class="underline underline-offset-2">{profile.login}</a></p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
+    )}
+
     {unavailable ? (
       <p class="surface-card mt-8 p-8 text-center muted" role="status">Public profiles are temporarily unavailable. Please try again later.</p>
     ) : profiles.length === 0 ? (
       <p class="surface-card mt-8 p-8 text-center muted">No public profiles yet.</p>
     ) : (
-      <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {profiles.map((profile) => (
-          <li class="surface-card p-5 sm:p-7">
-            <h2 class="section-title break-words">{profile.login}</h2>
-            <p class="muted mt-2 break-words text-sm">{profile.owner}/{profile.repo}</p>
-            <a class="button-secondary mt-5" href={`/u/${encodeURIComponent(profile.owner)}/${encodeURIComponent(profile.repo)}`} aria-label={`View ${profile.login}'s public recipes`}>View recipes</a>
-          </li>
-        ))}
-      </ul>
+      <section class="mt-10" aria-labelledby="people-heading">
+        <h2 id="people-heading" class="section-title">People</h2>
+        <ul class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {profiles.map((profile) => (
+            <li class="surface-card p-5 sm:p-7">
+              <h3 class="section-title break-words">{profile.login}</h3>
+              <p class="muted mt-2 break-words text-sm">{profile.owner}/{profile.repo}</p>
+              <a class="button-secondary mt-5" href={`/u/${encodeURIComponent(profile.owner)}/${encodeURIComponent(profile.repo)}`} aria-label={`View ${profile.login}'s public recipes`}>View recipes</a>
+            </li>
+          ))}
+        </ul>
+      </section>
     )}
   </div>
 </Layout>
