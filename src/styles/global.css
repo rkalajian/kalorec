@@ -26,8 +26,8 @@
 @layer components {
   .site-header { position: relative; z-index: 20; border-bottom: 1px solid var(--line); background: var(--surface); }
   .site-header__inner { max-width: 1184px; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 14px 24px; }
-  .site-brand { display: inline-flex; align-items: center; gap: 10px; flex: none; color: var(--ink); text-decoration: none; font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-weight: 700; letter-spacing: -.04em; }
-  .site-brand__mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 11px; background: #205a38; color: #fff; font-family: Georgia, serif; font-size: 23px; line-height: 1; }
+  .site-brand { display: inline-flex; align-items: center; flex: none; text-decoration: none; }
+  .site-brand__logo { display: block; width: 154px; height: 60px; object-fit: cover; object-position: center; }
   .site-nav { display: flex; align-items: center; gap: 6px; }
   .site-nav a, .site-nav button, .mobile-menu a, .mobile-menu button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border-radius: 10px; padding: 9px 12px; color: var(--muted); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
   .site-nav a:hover, .site-nav button:hover, .mobile-menu a:hover, .mobile-menu button:hover, .site-nav [aria-current="page"], .mobile-menu [aria-current="page"] { background: var(--sage); color: var(--ink); }
@@ -65,6 +65,10 @@
   .site-nav { display: none; }
   .mobile-menu { display: block; }
   .page-shell { padding-block: 28px 64px; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .site-brand { border-radius: 12px; background: #fffefa; }
 }
 
 @media print {

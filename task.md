@@ -57,3 +57,26 @@ Goal: make recipe discovery, editing, shopping, and settings clearer and more at
 Acceptance: navigation and primary actions remain obvious at narrow and wide widths; recipe cards and detail pages use consistent hierarchy; forms and list controls are usable by touch and keyboard; existing flows and checks pass.
 
 Result: responsive navigation, discovery pages, cards, shared detail view, editor, shopping list, settings, and informational pages refreshed. Saved image previews no longer expose internal paths. Manual focus, target, overflow, and color checks completed; primary text combinations exceed 4.5:1. Full suite: 236 tests passed. TypeScript check, production build, and diff check passed.
+
+## Follow-up: how-to-use cleanup
+
+Goal: make the guide easier to scan and act on while preserving accurate privacy and sharing guidance.
+
+1. Reorganize `src/pages/how-to-use.astro` into short setup, recipe, shopping, and sharing sections with direct links. Executor: main.
+2. Check responsive layout, semantic headings, links, focus, build, and diff. Executor: main.
+
+Acceptance: essential setup and privacy details remain clear; each task has a short action path; build and diff check pass.
+
+Result: guide condensed into four linked steps plus a privacy note. Build and diff check passed. Manual review found a logical heading order, list semantics, visible focus, readable colors, and no fixed-width mobile content. External audit command did not return output and was stopped.
+
+## Follow-up: site logo and favicon
+
+Goal: use the supplied Kalorec wordmark in the shared header and the supplied icon as the favicon.
+
+1. Copy the supplied PNGs into `public/` without altering them. Executor: asset subagent.
+2. Replace the text brand in `src/layouts/Layout.astro`, add favicon metadata, and size the image in `src/styles/global.css`. Executor: main.
+3. Verify build, asset references, responsive header, and diff. Executor: main.
+
+Acceptance: logo appears in the shared header, favicon loads from every route, images retain source fidelity, and build passes.
+
+Result: supplied PNGs copied byte for byte into `public/`; shared header uses the wordmark and links the favicon. Dark header gives the wordmark a light background. Production build and diff check passed.

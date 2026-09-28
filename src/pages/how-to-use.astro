@@ -2,23 +2,54 @@
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="How to Use">
-  <p class="eyebrow">From first recipe to dinner</p>
-  <h1 class="page-title mt-2">How to use Kalorec</h1>
-  <p class="page-intro mt-4">A few steps to build your collection and make it useful every day.</p>
-  <ol class="mt-8 grid list-decimal gap-3 pl-6 leading-relaxed marker:font-bold marker:text-[var(--forest)] sm:grid-cols-2">
-    <li>Log in with GitHub.</li>
-    <li>Pick a private source repo in Settings — that's where your recipes will live.</li>
-    <li>Pick a different public sharing repo in Settings. Kalorec puts published copies there, and your profile link uses that repo.</li>
-    <li>Add a recipe: type it in by hand, or paste a link to import it automatically.</li>
-    <li>Add an image by choosing a PNG, JPEG, WebP, or GIF file (up to 4 MB), or enter an HTTPS image URL. Kalorec saves the image in your recipe repo. Published recipes also get a copy in your public sharing repo.</li>
-    <li>Open Shopping list, choose recipes, and add their ingredient lines. Quantities stay as written. Edit, check, add, or remove items, then save the list to your private repo. You can also copy or print it.</li>
-    <li>Reload replaces the list in your browser with the saved version; it warns if you have unsaved edits. If another browser or GitHub changes the saved list first, saving is rejected so you can reload and avoid overwriting those changes.</li>
-    <li>Check "Publish a copy on my public Kalorec profile" for recipes you want visitors to see, then copy your share link from Settings.</li>
-    <li>Each saved shopping list and recipe update is a Git commit. Keep the source repo private: old list contents stay in its history. Unpublishing removes the current public recipe copy, but GitHub history and copies made while it was public can persist. Recipes once stored in a public source repo can remain exposed in that repo's history.</li>
-    <li>Browse a shared profile and click "Add to my recipes" to copy someone else's public recipe into your own repo.</li>
-  </ol>
-</Layout>
+  <div class="pb-12">
+    <header class="max-w-2xl">
+      <p class="eyebrow">Get started</p>
+      <h1 class="page-title mt-2">How to use Kalorec</h1>
+      <p class="page-intro mt-3">Save recipes, plan a shop, and share the ones you choose.</p>
+    </header>
 
-<style>
-  ol li { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 16px 18px; }
-</style>
+    <ol role="list" class="mt-8 grid list-none gap-4 md:grid-cols-2">
+      <li class="surface-card p-5 sm:p-7">
+        <div class="flex items-center gap-3">
+          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">1</span>
+          <h2 class="section-title">Set up your space</h2>
+        </div>
+        <p class="muted mt-4 leading-relaxed">Log in with GitHub, then choose a private repo for your recipes and shopping list. Create a private repo on GitHub first if you need one.</p>
+        <a href="/settings" class="text-link mt-4 inline-block">Choose your recipe repo</a>
+      </li>
+
+      <li class="surface-card p-5 sm:p-7">
+        <div class="flex items-center gap-3">
+          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">2</span>
+          <h2 class="section-title">Add a recipe</h2>
+        </div>
+        <p class="muted mt-4 leading-relaxed">Write one yourself or paste a recipe link to import it. Add tags and a photo from a file or HTTPS image URL.</p>
+        <a href="/recipes/new" class="text-link mt-4 inline-block">Add a recipe</a>
+      </li>
+
+      <li class="surface-card p-5 sm:p-7">
+        <div class="flex items-center gap-3">
+          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">3</span>
+          <h2 class="section-title">Make a shopping list</h2>
+        </div>
+        <p class="muted mt-4 leading-relaxed">Select recipes to add their ingredients. Quantities stay as written. Edit or check off items, then save your list. You can also copy or print it.</p>
+        <a href="/shopping-list" class="text-link mt-4 inline-block">Open shopping list</a>
+      </li>
+
+      <li class="surface-card p-5 sm:p-7">
+        <div class="flex items-center gap-3">
+          <span aria-hidden="true" class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--sage)] font-serif text-xl text-[var(--forest)]">4</span>
+          <h2 class="section-title">Share when you want</h2>
+        </div>
+        <p class="muted mt-4 leading-relaxed">Choose a separate, empty public repo in Settings. Publish individual recipes, then copy your profile link to share them. You can add recipes from other public profiles to your own collection.</p>
+        <a href="/settings" class="text-link mt-4 inline-block">Set up sharing</a>
+      </li>
+    </ol>
+
+    <aside aria-labelledby="privacy-heading" class="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--sage)] p-5 sm:p-7">
+      <h2 id="privacy-heading" class="font-serif text-xl font-bold">Keep your private repo private</h2>
+      <p class="muted mt-2 max-w-3xl leading-relaxed">Saved recipes and shopping lists create Git commits, so older contents remain in your repo’s history. Unpublishing removes the current public recipe copy, but past public copies and Git history may still be accessible.</p>
+    </aside>
+  </div>
+</Layout>
