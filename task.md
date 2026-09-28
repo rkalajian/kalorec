@@ -80,3 +80,14 @@ Goal: use the supplied Kalorec wordmark in the shared header and the supplied ic
 Acceptance: logo appears in the shared header, favicon loads from every route, images retain source fidelity, and build passes.
 
 Result: supplied PNGs copied byte for byte into `public/`; shared header uses the wordmark and links the favicon. Dark header gives the wordmark a light background. Production build and diff check passed.
+
+## Follow-up: About page refresh
+
+Goal: make `/about` a short, scannable explanation of Kalorec and its privacy model.
+
+1. Replace dense copy in `src/pages/about.astro` with a clear introduction, feature sections, privacy note, and guide link. Executor: main.
+2. Verify responsive layout, heading order, contrast, focus, production build, and diff. Executor: main.
+
+Acceptance: app purpose and GitHub storage are clear; shopping and sharing behavior remain accurate; privacy history warning remains visible.
+
+Result: About page now has a concise introduction, three feature cards, a Git history note, and a guide link. Responsive grid, heading order, focus styling, and text contrast reviewed; production build and diff check passed.

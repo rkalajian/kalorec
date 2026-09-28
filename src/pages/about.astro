@@ -2,21 +2,37 @@
 import Layout from "../layouts/Layout.astro";
 ---
 <Layout title="About">
-  <p class="eyebrow">Made for your kitchen</p>
-  <h1 class="page-title mt-2">About Kalorec</h1>
-  <p class="page-intro mt-4">A simple place to keep the recipes you return to.</p>
-  <div class="surface-card mt-8 space-y-5 p-6 leading-relaxed sm:p-8">
-  <p>
-    Kalorec is a recipe manager that stores your recipes as plain JSON files in a GitHub repo you choose — not a database you don't control. Add recipes by hand or import them from a link, tag and search them, and edit them like any other file in your repo.
-  </p>
-  <p>
-    Your recipes and saved shopping list live in a private GitHub repo you choose, so they stay portable and versioned. To share one, Kalorec copies that recipe into a separate public sharing repo for your profile. Visitors read only those published copies and can view or copy them.
-  </p>
-  <p>
-    Saving a shopping list creates a Git commit, so previous list contents remain in Git history. Keep the source repo private. Unpublishing removes the current public recipe copy, but GitHub history and copies made while it was public can persist. Recipes previously stored in a public source repo may remain exposed in that repo's history after moving to private source storage.
-  </p>
-  <p>
-    New here? See <a href="/how-to-use" class="text-link">How to use Kalorec</a>.
-  </p>
+  <div class="pb-12">
+    <header class="max-w-3xl">
+      <p class="eyebrow">Made for your kitchen</p>
+      <h1 class="page-title mt-2">A home for recipes worth keeping.</h1>
+      <p class="page-intro mt-4">Kalorec brings family favorites, weeknight staples, and recipes found online into one collection. Your recipes live as plain files in a private GitHub repo you choose.</p>
+      <a href="/how-to-use" class="button-primary mt-6">See how Kalorec works</a>
+    </header>
+
+    <div class="mt-10 grid gap-4 md:grid-cols-3">
+      <section class="surface-card p-5 sm:p-7" aria-labelledby="save-heading">
+        <p class="eyebrow">Collect</p>
+        <h2 id="save-heading" class="section-title mt-3">Save what you cook</h2>
+        <p class="muted mt-3 leading-relaxed">Write a recipe or import one from a link. Add a photo and tags, then search your collection when you need it again.</p>
+      </section>
+
+      <section class="surface-card p-5 sm:p-7" aria-labelledby="shop-heading">
+        <p class="eyebrow">Plan</p>
+        <h2 id="shop-heading" class="section-title mt-3">Shop from your recipes</h2>
+        <p class="muted mt-3 leading-relaxed">Gather ingredient lines into a list you can edit, check off, copy, and print. Save it with your recipes for next time.</p>
+      </section>
+
+      <section class="surface-card p-5 sm:p-7" aria-labelledby="share-heading">
+        <p class="eyebrow">Share</p>
+        <h2 id="share-heading" class="section-title mt-3">Share on your terms</h2>
+        <p class="muted mt-3 leading-relaxed">Publish only the recipes you choose to a separate public repo. Visitors can view them on your profile and copy them into their own collection.</p>
+      </section>
+    </div>
+
+    <aside aria-labelledby="ownership-heading" class="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--sage)] p-5 sm:p-7">
+      <h2 id="ownership-heading" class="font-serif text-xl font-bold">Your collection stays yours</h2>
+      <p class="muted mt-2 max-w-3xl leading-relaxed">Your complete collection and shopping list stay in your private repo. Git keeps earlier versions, including old list contents. Unpublishing removes the current public recipe copy, but Git history and copies made while it was public may remain accessible.</p>
+    </aside>
   </div>
 </Layout>
