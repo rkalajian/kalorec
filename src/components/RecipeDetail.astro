@@ -31,8 +31,10 @@ const nutrition = recipe.nutrition ? Object.entries(recipe.nutrition).filter(([,
         )}
         <div class="mt-7 flex flex-wrap gap-2">
           {recipe.instructions.length > 0 && <button id="cook-start" type="button" hidden class="button-primary">Start Cook Mode</button>}
+          <button id="recipe-wake-toggle" type="button" hidden aria-pressed="false" aria-describedby="recipe-wake-status" class="button-secondary">Keep screen on <span id="recipe-wake-state" aria-hidden="true">· Off</span></button>
           <slot name="actions" />
         </div>
+        <p id="recipe-wake-status" role="status" class="muted text-sm"></p>
       </div>
       {imageUrl ? <img src={imageUrl} alt={recipe.title} class="aspect-[4/3] h-full max-h-[520px] w-full object-cover lg:aspect-auto" /> : (
         <div class="grid min-h-52 place-items-center bg-[var(--sage)]" aria-hidden="true"><span class="font-serif text-9xl text-[var(--forest)] opacity-60">{recipe.title.charAt(0).toUpperCase()}</span></div>

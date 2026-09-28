@@ -115,3 +115,15 @@ Goal: make recipe instructions easy to follow while cooking and keep the screen 
 Acceptance: Cook Mode works on private and public recipe pages; a supported browser requests wake lock only while Cook Mode is open; wake lock releases on close and recovers after tab visibility changes; unsupported browsers remain usable with a status message; controls are accessible by keyboard and touch.
 
 Result: shared recipe detail has Cook Mode with checkable ingredients and step navigation. Screen Wake Lock is requested while open, released on exit, and requested again after tab return; unsupported or denied wake lock shows a fallback message. Accessibility audit findings for step-button focus and live announcements addressed. All 236 tests, TypeScript check, production build, and diff check passed.
+
+## Follow-up: independent screen wake option
+
+Goal: let readers keep the recipe page awake without entering Cook Mode.
+
+1. Add a separate, accessible Keep screen on toggle and status to the shared recipe detail header. Executor: main.
+2. Coordinate one wake lock between the page toggle and Cook Mode. Preserve the page choice when Cook Mode closes; release when neither needs it or the page exits; reacquire on tab return. Executor: subagent.
+3. Update guidance, review accessibility, run tests, TypeScript, build, and diff check. Executor: main.
+
+Acceptance: private and public recipe pages expose the option even when instructions are empty; the button reports on/off state and errors; exiting Cook Mode leaves a manually enabled screen lock active; disabling the option does not interrupt active Cook Mode; locks release when no longer requested.
+
+Result: every recipe detail has an independent Keep screen on toggle with a live status message. A shared wake lock stays active while the page option or Cook Mode needs it, resumes after tab return or browser history restore, and releases when neither needs it. Five focused lifecycle tests pass; full suite passed (240 tests), TypeScript, production build, and diff checks passed. Accessibility audit issues with initial status announcements and toggle naming addressed.

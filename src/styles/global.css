@@ -52,6 +52,8 @@
   .button-primary:hover { background: #16472b; color: #fff; }
   .button-secondary { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
   .button-secondary:hover { background: var(--sage); }
+  .button-secondary[aria-pressed="true"] { border-color: #205a38; background: #205a38; color: #fff; }
+  .button-secondary[aria-pressed="true"]:hover { background: #16472b; }
   .button-primary:disabled, .button-secondary:disabled, .button-primary[aria-disabled="true"], .button-secondary[aria-disabled="true"] { cursor: not-allowed; opacity: .55; }
   .field { width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 10px 13px; color: var(--ink); }
   .field:focus { border-color: var(--forest); }
@@ -60,6 +62,7 @@
   .text-link { color: var(--forest); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
   .muted { color: var(--muted); }
   .cook-dialog::backdrop { background: #08130cbd; }
+  #recipe-wake-status:not(:empty) { margin-top: .75rem; }
 }
 
 @media (max-width: 1000px) {
