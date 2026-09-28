@@ -29,7 +29,10 @@ const nutrition = recipe.nutrition ? Object.entries(recipe.nutrition).filter(([,
             {recipe.cookTime && <div><dt class="muted text-xs font-bold uppercase tracking-wide">Cook time</dt><dd class="mt-1 font-semibold">{recipe.cookTime}</dd></div>}
           </dl>
         )}
-        <div class="mt-7 flex flex-wrap gap-2"><slot name="actions" /></div>
+        <div class="mt-7 flex flex-wrap gap-2">
+          {recipe.instructions.length > 0 && <button id="cook-start" type="button" hidden class="button-primary">Start Cook Mode</button>}
+          <slot name="actions" />
+        </div>
       </div>
       {imageUrl ? <img src={imageUrl} alt={recipe.title} class="aspect-[4/3] h-full max-h-[520px] w-full object-cover lg:aspect-auto" /> : (
         <div class="grid min-h-52 place-items-center bg-[var(--sage)]" aria-hidden="true"><span class="font-serif text-9xl text-[var(--forest)] opacity-60">{recipe.title.charAt(0).toUpperCase()}</span></div>
@@ -64,3 +67,46 @@ const nutrition = recipe.nutrition ? Object.entries(recipe.nutrition).filter(([,
     </div>
   )}
 </article>
+
+{recipe.instructions.length > 0 && (
+  <dialog id="cook-mode" aria-labelledby="cook-mode-title" class="cook-dialog max-h-[calc(100dvh-2rem)] w-[min(720px,calc(100%-2rem))] overflow-y-auto rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-0 text-[var(--ink)] shadow-2xl">
+    <div class="p-5 sm:p-7">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="eyebrow">Cook Mode</p>
+          <h2 id="cook-mode-title" class="section-title mt-2">{recipe.title}</h2>
+        </div>
+        <button id="cook-close" type="button" class="button-secondary shrink-0">Close</button>
+      </div>
+      <p id="cook-wake-status" role="status" class="muted mt-4 text-sm" aria-live="polite">Checking screen wake support…</p>
+
+      {recipe.ingredients.length > 0 && (
+        <details class="mt-6 rounded-xl border border-[var(--line)] bg-[var(--sage)] p-4">
+          <summary class="min-h-8 cursor-pointer font-bold">Ingredients ({recipe.ingredients.length})</summary>
+          <ul class="mt-3 max-h-48 space-y-1 overflow-y-auto">
+            {recipe.ingredients.map((item) => (
+              <li><label class="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-2 py-1 hover:bg-[var(--surface)]"><input type="checkbox" class="size-5 shrink-0 accent-[#205a38]" /><span>{item}</span></label></li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <section aria-label="Instructions" class="mt-6">
+        <div aria-live="polite" aria-atomic="true">
+          <p id="cook-counter" class="eyebrow">Step 1 of {recipe.instructions.length}</p>
+          <ol class="mt-3">
+            {recipe.instructions.map((step, index) => (
+              <li data-cook-step hidden={index !== 0} class="text-lg leading-relaxed sm:text-xl">{step}</li>
+            ))}
+          </ol>
+        </div>
+        <div class="mt-8 flex gap-3">
+          <button id="cook-prev" type="button" aria-disabled="true" class="button-secondary min-w-28 flex-1">Previous</button>
+          <button id="cook-next" type="button" class="button-primary min-w-28 flex-1">Next</button>
+        </div>
+      </section>
+    </div>
+  </dialog>
+)}
+
+<script src="../scripts/cook-mode.ts"></script>

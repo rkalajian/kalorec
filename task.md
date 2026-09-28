@@ -103,3 +103,15 @@ Goal: make selected repositories and next actions easy to find while keeping rep
 Acceptance: current repo choices remain visible; alternative choices are discoverable; reload/sync and copy-link actions work; required privacy guidance remains clear.
 
 Result: selected repos now sit in prominent cards; alternative choices use accessible disclosure controls; public setup waits for private selection; profile link appears when available. Manual keyboard, heading, contrast, and mobile-width review completed. All 236 tests, production build, and diff check passed.
+
+## Follow-up: Cook Mode
+
+Goal: make recipe instructions easy to follow while cooking and keep the screen awake when the browser permits.
+
+1. Add an accessible Cook Mode to the shared recipe detail component with ingredient checkboxes, one instruction at a time, previous/next controls, and clear close control. Executor: main.
+2. Add client behavior for dialog state, step navigation, and Screen Wake Lock acquisition, reacquisition after returning to the tab, and release on exit. Show a clear fallback when wake lock is unavailable or denied. Executor: subagent.
+3. Document behavior briefly and verify keyboard access, screen wake lifecycle, TypeScript, tests, build, and diff. Executor: main.
+
+Acceptance: Cook Mode works on private and public recipe pages; a supported browser requests wake lock only while Cook Mode is open; wake lock releases on close and recovers after tab visibility changes; unsupported browsers remain usable with a status message; controls are accessible by keyboard and touch.
+
+Result: shared recipe detail has Cook Mode with checkable ingredients and step navigation. Screen Wake Lock is requested while open, released on exit, and requested again after tab return; unsupported or denied wake lock shows a fallback message. Accessibility audit findings for step-button focus and live announcements addressed. All 236 tests, TypeScript check, production build, and diff check passed.
