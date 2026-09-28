@@ -30,6 +30,7 @@ const year = new Date().getFullYear();
           <a href="/" aria-current={path === "/" ? "page" : undefined}>{session ? "My recipes" : "Home"}</a>
           {session?.repo && <a href="/shopping-list" aria-current={path === "/shopping-list" ? "page" : undefined}>Shopping list</a>}
           <a href="/about" aria-current={path === "/about" ? "page" : undefined}>About</a>
+          <a href="/users" aria-current={path === "/users" ? "page" : undefined}>People</a>
           <a href="/how-to-use" aria-current={path === "/how-to-use" ? "page" : undefined}>How to use</a>
           {session ? (
             <>
@@ -45,6 +46,7 @@ const year = new Date().getFullYear();
             <a href="/" aria-current={path === "/" ? "page" : undefined}>{session ? "My recipes" : "Home"}</a>
             {session?.repo && <a href="/shopping-list" aria-current={path === "/shopping-list" ? "page" : undefined}>Shopping list</a>}
             <a href="/about" aria-current={path === "/about" ? "page" : undefined}>About</a>
+            <a href="/users" aria-current={path === "/users" ? "page" : undefined}>People</a>
             <a href="/how-to-use" aria-current={path === "/how-to-use" ? "page" : undefined}>How to use</a>
             {session ? (
               <>

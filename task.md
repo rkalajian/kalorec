@@ -1,5 +1,19 @@
 # Goal
 
+## Follow-up: public profile directory
+
+Goal: list Kalorec accounts with a selected public sharing repository and link to each public profile.
+
+1. Add a site-wide directory keyed by stable GitHub user ID; register/update after public sharing setup, refresh on login and source repo changes, remove when sharing is cleared. Executor: main. Targets: session, callback, settings APIs, new registry library, focused tests.
+2. Add public `/users` page, shared navigation, and privacy disclosure. Executor: subagent. Targets: page, layout, routing, privacy copy.
+3. Verify public repo visibility, old-session behavior, registry failure handling, tests, typecheck, build, diff.
+
+Acceptance: anonymous visitors can browse only configured public profiles; duplicate logins create one entry; changed selections replace prior links; hidden/private repos are omitted; all cards link to existing `/u/{owner}/{repo}` pages.
+
+Result: `/users` lists registered public sharing profiles and links to their recipe pages. Netlify Blobs stores one entry per GitHub ID; login and settings actions refresh it, source changes clear it, and reads verify repo visibility with GitHub. Existing users enter the directory on their next login or repository reload/sync. All 252 tests, TypeScript, build, and diff check passed. Manual heading, link target, focus, and contrast review completed; the requested Opus audit could not run because the CLI session limit was reached.
+
+---
+
 ## Follow-up: login count and footer
 
 Goal: count distinct GitHub accounts that successfully log in and show the total in a shared footer with a privacy policy and current copyright year.

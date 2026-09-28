@@ -8,7 +8,9 @@ import {
 } from "../../../../src/lib/session";
 
 const recordLogin = vi.hoisted(() => vi.fn());
+const savePublicProfile = vi.hoisted(() => vi.fn());
 vi.mock("../../../../src/lib/loginCount", () => ({ recordLogin }));
+vi.mock("../../../../src/lib/publicProfiles", () => ({ savePublicProfile }));
 
 function fakeContext(opts: {
   code?: string;
@@ -42,6 +44,7 @@ function fakeContext(opts: {
 describe("GET /api/auth/callback", () => {
   beforeEach(() => {
     recordLogin.mockReset().mockResolvedValue(undefined);
+    savePublicProfile.mockReset().mockResolvedValue(undefined);
     vi.stubEnv("GITHUB_CLIENT_ID", "client-abc");
     vi.stubEnv("GITHUB_CLIENT_SECRET", "secret-xyz");
     vi.stubEnv("SESSION_SECRET", "test-secret-value");
@@ -102,6 +105,7 @@ describe("GET /api/auth/callback", () => {
     expect(cookieOptions).toEqual(SESSION_COOKIE_OPTIONS);
     expect(decryptSession(cookieValue, "test-secret-value")).toEqual({
       githubLogin: "rob",
+      githubId: 42,
       accessToken: "gho_new",
       repo: null,
       sharingRepo: null,
@@ -174,9 +178,13 @@ describe("GET /api/auth/callback", () => {
     expect(cookieOptions).toEqual(SESSION_COOKIE_OPTIONS);
     expect(decryptSession(cookieValue, "test-secret-value")).toEqual({
       githubLogin: "rob",
+      githubId: 42,
       accessToken: "gho_new",
       repo: { owner: "rob", name: "recipes", branch: "main", private: true },
       sharingRepo: { owner: "rob", name: "shared-recipes", branch: "main", private: false },
+    });
+    expect(savePublicProfile).toHaveBeenCalledWith(42, "rob", {
+      owner: "rob", name: "shared-recipes", branch: "main", private: false,
     });
   });
 
@@ -211,6 +219,7 @@ describe("GET /api/auth/callback", () => {
     const [, cookieValue] = setCalls[0];
     expect(decryptSession(cookieValue, "test-secret-value")).toEqual({
       githubLogin: "bob",
+      githubId: 73,
       accessToken: "gho_bob",
       repo: null,
       sharingRepo: null,

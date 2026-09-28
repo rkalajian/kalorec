@@ -9,6 +9,7 @@ import {
   type Session,
 } from "../../../lib/session";
 import { recordLogin } from "../../../lib/loginCount";
+import { savePublicProfile } from "../../../lib/publicProfiles";
 
 export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   // Read required config up front so a misconfigured deploy fails fast and loudly
@@ -64,6 +65,7 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
 
   const session: Session = {
     githubLogin: userLogin!,
+    githubId: userId!,
     accessToken: accessToken!,
     // Only carry a repo selection forward when the SAME GitHub account logs back in —
     // otherwise a second user on this browser would inherit the first user's repo.
@@ -78,6 +80,13 @@ export const GET: APIRoute = async ({ url, cookies, redirect }) => {
   } catch (error) {
     // A storage outage must not prevent a verified GitHub user from logging in.
     console.error("Unable to record login", error);
+  }
+  if (session.sharingRepo) {
+    try {
+      await savePublicProfile(userId!, userLogin!, session.sharingRepo);
+    } catch (error) {
+      console.error("Unable to refresh public profile listing", error);
+    }
   }
 
   return redirect(session.repo ? "/" : "/settings");

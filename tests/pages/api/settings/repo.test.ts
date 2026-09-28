@@ -8,6 +8,13 @@ import {
 import { loadSharingRepo } from "../../../../src/lib/publishing";
 
 const { sourceList, sharingList } = vi.hoisted(() => ({ sourceList: vi.fn(), sharingList: vi.fn() }));
+const { savePublicProfile, removePublicProfile } = vi.hoisted(() => ({ savePublicProfile: vi.fn(), removePublicProfile: vi.fn() }));
+
+vi.mock("../../../../src/lib/publicProfiles", () => ({
+  resolveGithubId: vi.fn(async (session: Session) => session.githubId),
+  savePublicProfile,
+  removePublicProfile,
+}));
 
 const mockOctokitInstance = {
   repos: {
@@ -45,6 +52,8 @@ describe("POST /api/settings/repo", () => {
     vi.mocked(loadSharingRepo).mockReset().mockResolvedValue(null);
     sourceList.mockReset().mockResolvedValue([]);
     sharingList.mockReset().mockResolvedValue([]);
+    savePublicProfile.mockReset().mockResolvedValue(undefined);
+    removePublicProfile.mockReset().mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -99,7 +108,7 @@ describe("POST /api/settings/repo", () => {
     const { POST } = await import("../../../../src/pages/api/settings/repo");
     const response = await POST({
       request: formRequest({ owner: "rob", name: "public-recipes" }),
-      locals: { session: { githubLogin: "rob", accessToken: "tok", repo: null } },
+      locals: { session: { githubLogin: "rob", githubId: 42, accessToken: "tok", repo: null } },
       cookies: { set: vi.fn() },
       redirect: (location: string) => new Response(null, { status: 302, headers: { Location: location } }),
     } as any);
@@ -115,7 +124,7 @@ describe("POST /api/settings/repo", () => {
     const set = vi.fn();
     const response = await POST({
       request: formRequest({ owner: "rob", name: "recipes" }),
-      locals: { session: { githubLogin: "rob", accessToken: "tok", repo: null } },
+      locals: { session: { githubLogin: "rob", githubId: 42, accessToken: "tok", repo: null } },
       cookies: { set },
       redirect: (location: string) => new Response(null, { status: 302, headers: { Location: location } }),
     } as any);
@@ -124,6 +133,7 @@ describe("POST /api/settings/repo", () => {
     expect(decryptSession(set.mock.calls[0][1], "test-secret-value")?.sharingRepo).toEqual({
       owner: "rob", name: "shared", branch: "main", private: false,
     });
+    expect(savePublicProfile).toHaveBeenCalledWith(42, "rob", { owner: "rob", name: "shared", branch: "main", private: false });
   });
 
   it("blocks source switching while the current public repo has copies", async () => {
@@ -145,6 +155,26 @@ describe("POST /api/settings/repo", () => {
     } as any);
     expect(response.headers.get("Location")).toBe("/settings?error=sharing_repo_has_published_recipes");
     expect(set).not.toHaveBeenCalled();
+  });
+
+  it("removes the listing when a source change clears sharing", async () => {
+    mockOctokitInstance.repos.get.mockResolvedValue({
+      data: { default_branch: "main", private: true, permissions: { push: true } },
+    });
+    const { POST } = await import("../../../../src/pages/api/settings/repo");
+    const response = await POST({
+      request: formRequest({ owner: "rob", name: "new-private" }),
+      locals: { session: {
+        githubLogin: "rob", githubId: 42, accessToken: "tok",
+        repo: { owner: "rob", name: "old-private", branch: "main", private: true },
+        sharingRepo: { owner: "rob", name: "shared", branch: "main", private: false },
+      } },
+      cookies: { set: vi.fn() },
+      redirect: (location: string) => new Response(null, { status: 302, headers: { Location: location } }),
+    } as any);
+    expect(response.headers.get("Location")).toBe("/");
+    expect(removePublicProfile).toHaveBeenCalledWith(42);
+    expect(savePublicProfile).not.toHaveBeenCalled();
   });
 
   it("returns 400 when owner or name is missing", async () => {

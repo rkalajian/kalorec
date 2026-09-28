@@ -4,6 +4,7 @@ import { resolveRepoSelection } from "../../../lib/repos";
 import { encryptSession, requireEnv, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "../../../lib/session";
 import { getStore } from "../../../lib/store";
 import { getSharingStore, loadSharingRepo, publishRecipe, saveSharingRepo, unpublishRecipe, verifySharingRepos } from "../../../lib/publishing";
+import { resolveGithubId, savePublicProfile } from "../../../lib/publicProfiles";
 
 export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => {
   const form = await request.formData();
@@ -74,6 +75,13 @@ export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => 
     return redirect("/settings?error=migration_failed");
   }
 
+  let githubId: number;
+  try {
+    githubId = await resolveGithubId(locals.session);
+  } catch {
+    return redirect("/settings?error=account_id_failed");
+  }
+
   if (!sameDestination) {
     try {
       await saveSharingRepo(locals.session.accessToken, locals.session.repo, sharingRepo);
@@ -82,12 +90,17 @@ export const POST: APIRoute = async ({ request, locals, cookies, redirect }) => 
     }
   }
 
-  const session = { ...locals.session, sharingRepo };
+  const session = { ...locals.session, githubId, sharingRepo };
   cookies.set(
     SESSION_COOKIE,
     encryptSession(session, requireEnv("SESSION_SECRET", import.meta.env.SESSION_SECRET)),
     SESSION_COOKIE_OPTIONS
   );
+  try {
+    await savePublicProfile(githubId, session.githubLogin, sharingRepo);
+  } catch {
+    return redirect("/settings?error=directory_update_failed");
+  }
   try {
     const sharingStore = getSharingStore(session);
     const published = await sharingStore.list();

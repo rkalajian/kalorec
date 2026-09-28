@@ -1,12 +1,18 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { decryptSession, type Session } from "../../../../src/lib/session";
 
-const { octokit, sourceStore, sharingStore, publishRecipe, unpublishRecipe } = vi.hoisted(() => ({
+const { octokit, sourceStore, sharingStore, publishRecipe, unpublishRecipe, savePublicProfile } = vi.hoisted(() => ({
   octokit: { repos: { get: vi.fn() } },
   sourceStore: { list: vi.fn() },
   sharingStore: { list: vi.fn() },
   publishRecipe: vi.fn(),
   unpublishRecipe: vi.fn(),
+  savePublicProfile: vi.fn(),
+}));
+
+vi.mock("../../../../src/lib/publicProfiles", () => ({
+  resolveGithubId: vi.fn(async (session: Session) => session.githubId),
+  savePublicProfile,
 }));
 
 vi.mock("@octokit/rest", () => ({ Octokit: vi.fn(() => octokit) }));
@@ -27,7 +33,7 @@ function request(fields: Record<string, string>) {
 }
 
 const session: Session = {
-  githubLogin: "rob", accessToken: "tok",
+  githubLogin: "rob", githubId: 42, accessToken: "tok",
   repo: { owner: "rob", name: "private-recipes", branch: "main", private: true },
 };
 const redirect = (location: string) => new Response(null, { status: 302, headers: { Location: location } });
@@ -37,6 +43,7 @@ describe("POST /api/settings/sharing-repo", () => {
     vi.stubEnv("SESSION_SECRET", "test-secret-value");
     octokit.repos.get.mockReset(); sourceStore.list.mockReset(); sharingStore.list.mockReset(); publishRecipe.mockReset(); unpublishRecipe.mockReset();
     sourceStore.list.mockResolvedValue([]); sharingStore.list.mockResolvedValue([]); publishRecipe.mockResolvedValue(undefined); unpublishRecipe.mockResolvedValue(undefined);
+    savePublicProfile.mockReset().mockResolvedValue(undefined);
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.resetModules(); });
 
@@ -49,6 +56,7 @@ describe("POST /api/settings/sharing-repo", () => {
     const response = await POST({ request: request({ owner: "rob", name: "shared" }), locals: { session }, cookies: { set }, redirect } as any);
     expect(response.headers.get("Location")).toBe("/settings");
     expect(publishRecipe).toHaveBeenCalledWith(sharingStore, recipe, expect.objectContaining({ repo: expect.objectContaining({ name: "private-recipes" }) }));
+    expect(savePublicProfile).toHaveBeenCalledWith(42, "rob", { owner: "rob", name: "shared", branch: "main", private: false });
     expect(decryptSession(set.mock.calls[0][1], "test-secret-value")?.sharingRepo).toEqual({ owner: "rob", name: "shared", branch: "main", private: false });
   });
 
@@ -57,6 +65,18 @@ describe("POST /api/settings/sharing-repo", () => {
     const { POST } = await import("../../../../src/pages/api/settings/sharing-repo");
     const response = await POST({ request: request({ owner: "rob", name: "private" }), locals: { session }, cookies: { set: vi.fn() }, redirect } as any);
     expect(response.headers.get("Location")).toBe("/settings?error=sharing_must_be_public");
+    expect(savePublicProfile).not.toHaveBeenCalled();
+  });
+
+  it("reports a directory update failure after saving the selected repo", async () => {
+    octokit.repos.get.mockResolvedValue({ data: { default_branch: "main", private: false, permissions: { push: true } } });
+    savePublicProfile.mockRejectedValueOnce(new Error("storage unavailable"));
+    const { POST } = await import("../../../../src/pages/api/settings/sharing-repo");
+    const set = vi.fn();
+    const response = await POST({ request: request({ owner: "rob", name: "shared" }), locals: { session }, cookies: { set }, redirect } as any);
+    expect(response.headers.get("Location")).toBe("/settings?error=directory_update_failed");
+    expect(set).toHaveBeenCalledTimes(1);
+    expect(publishRecipe).not.toHaveBeenCalled();
   });
 
   it("does not save the repo when migration fails", async () => {

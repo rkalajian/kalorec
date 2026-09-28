@@ -1,0 +1,38 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { listPublicProfiles } from "../lib/publicProfiles";
+
+let profiles: Awaited<ReturnType<typeof listPublicProfiles>> = [];
+let unavailable = false;
+try {
+  profiles = await listPublicProfiles();
+} catch (error) {
+  console.error("Unable to load public profile directory", error);
+  unavailable = true;
+}
+---
+<Layout title="People">
+  <div class="pb-12">
+    <header class="max-w-3xl">
+      <p class="eyebrow">Shared recipes</p>
+      <h1 class="page-title mt-2">People on Kalorec</h1>
+      <p class="page-intro mt-4">Explore public recipe collections shared by Kalorec users.</p>
+    </header>
+
+    {unavailable ? (
+      <p class="surface-card mt-8 p-8 text-center muted" role="status">Public profiles are temporarily unavailable. Please try again later.</p>
+    ) : profiles.length === 0 ? (
+      <p class="surface-card mt-8 p-8 text-center muted">No public profiles yet.</p>
+    ) : (
+      <ul class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {profiles.map((profile) => (
+          <li class="surface-card p-5 sm:p-7">
+            <h2 class="section-title break-words">{profile.login}</h2>
+            <p class="muted mt-2 break-words text-sm">{profile.owner}/{profile.repo}</p>
+            <a class="button-secondary mt-5" href={`/u/${encodeURIComponent(profile.owner)}/${encodeURIComponent(profile.repo)}`} aria-label={`View ${profile.login}'s public recipes`}>View recipes</a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</Layout>

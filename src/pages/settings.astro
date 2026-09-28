@@ -29,6 +29,8 @@ const errorMessages: Record<string, string> = {
   sharing_config_load_failed: "Could not load this repo's sharing configuration. Try again.",
   sharing_config_invalid: "This repo's saved sharing destination is no longer a separate public repo you can write to.",
   sharing_config_save_failed: "Could not save the sharing configuration. Try again.",
+  account_id_failed: "Could not verify your GitHub account. Try logging in again.",
+  directory_update_failed: "Your repo selection was saved, but the public directory could not be updated. Use Reload recipes or Sync recipes to retry.",
 };
 const error = errorMessages[Astro.url.searchParams.get("error") ?? ""];
 const privateRepos = repos.filter((repo) => repo.private);
